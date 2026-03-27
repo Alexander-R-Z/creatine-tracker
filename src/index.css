@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+@theme {
+	--font-sans: ui-sans-serif, system-ui, sans-serif;
+	--font-headline: ui-sans-serif, system-ui, sans-serif;
+	--color-secondary: #4a3b30;
+}
+
+body {
+	background-color: #000000;
+	color: #ffffff;
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar for a cleaner look */
+::-webkit-scrollbar {
+	width: 0px;
+}
