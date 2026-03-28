@@ -246,7 +246,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 									</span>
 									<span className='text-sm font-bold text-[#444444] ml-1'>g</span>
 									{isSmartCapped && (
-										<div className='absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap'>
+										<div className='absolute top-13 left-1/2 -translate-x-1/2 whitespace-nowrap'>
 											<span className='text-[8px] font-black text-[#00fdc1] uppercase tracking-widest bg-[#00fdc1]/10 px-1.5 py-0.5 rounded-full border border-[#00fdc1]/20'>
 												Smart Cap
 											</span>
