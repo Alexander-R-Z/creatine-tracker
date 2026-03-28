@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { AppState, getLogForDate, updateDayLog } from '../lib/storage';
@@ -11,18 +11,115 @@ interface HistoryProps {
 }
 
 export default function History({ state, updateState }: HistoryProps) {
+	const MONTHS_BATCH_SIZE = 12;
+
 	const last7Days = useMemo(() => {
 		const now = new Date();
 		return Array.from({ length: 7 }).map((_, i) => subDays(now, i));
 	}, []);
 
-	const last24Months = useMemo(() => {
+	const retentionMonths = state.settings.entryRetentionMonths ?? 24;
+
+	const monthsInRetention = useMemo(() => {
 		const now = new Date();
-		return Array.from({ length: 24 }).map((_, i) => subMonths(now, i));
-	}, []);
+		return Array.from({ length: retentionMonths }).map((_, i) => subMonths(now, i));
+	}, [retentionMonths]);
 
 	const [editingDate, setEditingDate] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState<number>(0);
+	const [visibleMonthCount, setVisibleMonthCount] = useState(MONTHS_BATCH_SIZE);
+	const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+	const isLoadingMoreRef = useRef(false);
+
+	const archiveMonths = useMemo(() => {
+		const monthSummaries = monthsInRetention.map((monthDate) => {
+			const monthName = format(monthDate, 'MMMM');
+			const year = format(monthDate, 'yyyy');
+			const monthKey = format(monthDate, 'yyyy-MM');
+			const days = eachDayOfInterval({
+				start: startOfMonth(monthDate),
+				end: endOfMonth(monthDate),
+			});
+
+			let completedDays = 0;
+			let hasAnyActivity = false;
+
+			for (const day of days) {
+				const log = getLogForDate(state, format(day, 'yyyy-MM-dd'));
+				if (log.total > 0) {
+					hasAnyActivity = true;
+				}
+				if (log.total >= state.settings.dailyGoal) {
+					completedDays++;
+				}
+			}
+
+			return {
+				monthDate,
+				monthName,
+				year,
+				monthKey,
+				days,
+				completedDays,
+				hasAnyActivity,
+			};
+		});
+
+		let oldestActiveMonthIdx = -1;
+		for (let i = monthSummaries.length - 1; i >= 0; i--) {
+			if (monthSummaries[i].hasAnyActivity) {
+				oldestActiveMonthIdx = i;
+				break;
+			}
+		}
+
+		if (oldestActiveMonthIdx === -1) {
+			return [];
+		}
+
+		// Keep all months up to the oldest active month to preserve timeline gaps,
+		// and hide trailing empty months older than real usage.
+		return monthSummaries.slice(0, oldestActiveMonthIdx + 1);
+	}, [monthsInRetention, state, state.settings.dailyGoal]);
+
+	useEffect(() => {
+		setVisibleMonthCount(MONTHS_BATCH_SIZE);
+	}, [archiveMonths.length]);
+
+	const visibleArchiveMonths = useMemo(
+		() => archiveMonths.slice(0, visibleMonthCount),
+		[archiveMonths, visibleMonthCount],
+	);
+
+	const hasMoreArchiveMonths = visibleMonthCount < archiveMonths.length;
+
+	useEffect(() => {
+		isLoadingMoreRef.current = false;
+	}, [visibleMonthCount]);
+
+	useEffect(() => {
+		if (!hasMoreArchiveMonths) return;
+		const sentinel = loadMoreSentinelRef.current;
+		if (!sentinel) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const isIntersecting = entries.some((entry) => entry.isIntersecting);
+				if (!isIntersecting || isLoadingMoreRef.current) return;
+
+				isLoadingMoreRef.current = true;
+				setVisibleMonthCount((prev) => Math.min(prev + MONTHS_BATCH_SIZE, archiveMonths.length));
+			},
+			{
+				root: null,
+				rootMargin: '0px 0px 220px 0px',
+				threshold: 0.1,
+			},
+		);
+
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	}, [archiveMonths.length, hasMoreArchiveMonths]);
 
 	const startEditing = (dateStr: string, currentTotal: number) => {
 		setEditingDate(dateStr);
@@ -188,27 +285,11 @@ export default function History({ state, updateState }: HistoryProps) {
 				</div>
 
 				<div className='space-y-6 relative z-10'>
-					{last24Months.map((monthDate, idx) => {
-						const monthName = format(monthDate, 'MMMM');
-						const year = format(monthDate, 'yyyy');
-						const days = eachDayOfInterval({
-							start: startOfMonth(monthDate),
-							end: endOfMonth(monthDate),
-						});
-
-						const completedDays = days.filter((d) => {
-							const log = getLogForDate(state, format(d, 'yyyy-MM-dd'));
-							return log.total >= state.settings.dailyGoal;
-						}).length;
-
-						// Only show months that have data or are recent (last 3 months)
-						const hasData = completedDays > 0;
-						const isRecent = idx < 3;
-						if (!hasData && !isRecent) return null;
+					{visibleArchiveMonths.map(({ monthName, year, monthKey, days, completedDays }) => {
 
 						return (
 							<div
-								key={idx}
+								key={monthKey}
 								className='bg-[#131313]/80 backdrop-blur-xl rounded-[1.5rem] p-5 border border-[#4a3b30]/25 relative overflow-hidden'
 							>
 								<div className='pointer-events-none absolute -right-16 -top-16 w-44 h-44 bg-[#00fdc1]/6 blur-3xl rounded-full' />
@@ -264,6 +345,8 @@ export default function History({ state, updateState }: HistoryProps) {
 							</div>
 						);
 					})}
+
+					{hasMoreArchiveMonths && <div ref={loadMoreSentinelRef} className='h-1 w-full' aria-hidden='true' />}
 				</div>
 			</section>
 		</div>
