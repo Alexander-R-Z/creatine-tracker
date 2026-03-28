@@ -1,6 +1,18 @@
 import { ChangeEvent, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus, Calculator, X, Settings as SettingsIcon, Trash2, Download, Upload } from 'lucide-react';
+import {
+	Plus,
+	Minus,
+	Calculator,
+	X,
+	Settings as SettingsIcon,
+	Trash2,
+	Download,
+	Upload,
+	Target,
+	Zap,
+	Info,
+} from 'lucide-react';
 import { AppState, Settings as SettingsType } from '../lib/storage';
 import { cn } from '../lib/utils';
 import { Button, Card } from './ui';
@@ -173,7 +185,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
 						Performance Goals
 					</span>
 				</div>
@@ -272,7 +284,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<Calculator className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
 						Smart Calibration
 					</span>
 				</div>
@@ -298,8 +310,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			{/* System Section */}
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
-					<SettingsIcon className='text-[#b7a79a] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
+					<SettingsIcon className='text-tertiary w-4 h-4' />
+					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
 						System
 					</span>
 				</div>
@@ -395,7 +407,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
 						Data Backup
 					</span>
 				</div>
@@ -448,36 +460,52 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			{/* Calibration Modal */}
 			<AnimatePresence>
 				{isCalibrating && (
-					<div className='fixed inset-0 z-[60] flex items-end justify-center px-4 pb-10 bg-black/80 backdrop-blur-sm'>
+					<div
+						className='fixed inset-0 z-[60] flex items-end justify-center px-4 bg-black/80 backdrop-blur-sm'
+						style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
+					>
 						<motion.div
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: 100, opacity: 0 }}
-							className='w-full max-w-md bg-[#262626]/80 backdrop-blur-2xl rounded-[1.5rem] p-8 border border-white/10 shadow-2xl'
+							className='w-full max-w-md bg-[#111111] backdrop-blur-2xl rounded-2xl border border-white/5 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-120px)]'
 						>
-							<div className='flex justify-between items-center mb-8'>
-								<h3 className='font-headline text-2xl font-extrabold'>Calibration</h3>
-								<button
-									onClick={() => setIsCalibrating(false)}
-									aria-label='Close calibration'
-									title='Close calibration'
-									className='text-[#ababab] hover:text-white'
-								>
-									<X className='w-6 h-6' />
-								</button>
+							{/* Header */}
+							<div className='bg-gradient-to-b from-[#1a1a1a] to-[#111111] px-5 py-4 border-b border-white/5 flex-shrink-0'>
+								<div className='flex justify-between items-center mb-2'>
+									<div className='flex items-center gap-2.5'>
+										<div className='p-1.5 rounded-lg bg-[#7f98ff]/10 border border-[#7f98ff]/20'>
+											<Calculator className='w-4 h-4 text-[#7f98ff]' />
+										</div>
+										<h3 className='font-headline text-xl font-extrabold'>Calibration</h3>
+									</div>
+									<button
+										onClick={() => setIsCalibrating(false)}
+										aria-label='Close calibration'
+										title='Close calibration'
+										className='text-[#ababab] hover:text-white transition-colors'
+									>
+										<X className='w-5 h-5' />
+									</button>
+								</div>
+								<p className='text-[#7c7c7c] text-[11px]'>
+									Adjust your body weight and performance level to calculate the optimal daily dose.
+								</p>
 							</div>
 
-							<div className='space-y-8'>
-								<div className='space-y-2'>
-									<label className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-										Current Weight Calibration
+							{/* Content - Scrollable */}
+							<div className='px-5 py-4 space-y-3.5 overflow-y-auto flex-1'>
+								{/* Weight Section */}
+								<div className='bg-[#0e0e0e] border border-white/5 rounded-xl p-5 space-y-4'>
+									<label className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase block'>
+										Body Weight
 									</label>
-									<div className='flex items-center justify-between border-b border-[#00fdc1]/30 py-4'>
-										<div className='flex items-center gap-4'>
-											<span className='text-5xl font-headline font-black text-[#00fdc1] w-24'>
+									<div className='flex items-center justify-between'>
+										<div className='flex items-baseline gap-2'>
+											<span className='text-5xl font-headline font-black text-[#00fdc1]'>
 												{weight}
 											</span>
-											<span className='text-xl font-headline font-bold text-[#ababab]'>kg</span>
+											<span className='text-xl font-bold text-[#ababab]'>kg</span>
 										</div>
 										<div className='flex items-center gap-2'>
 											<button
@@ -486,13 +514,13 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 												aria-label='Decrease weight'
 												title='Decrease weight'
 												className={cn(
-													'w-12 h-12 rounded-full border flex items-center justify-center transition-all bg-[#131313]/50',
+													'w-10 h-10 rounded-full border flex items-center justify-center transition-all',
 													canDecreaseWeight
-														? 'border-white/10 text-white active:scale-90 hover:bg-[#1c1c1c]'
+														? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
 														: 'border-white/5 text-white/30 cursor-not-allowed',
 												)}
 											>
-												<Minus className='w-5 h-5' />
+												<Minus className='w-4 h-4' />
 											</button>
 											<button
 												onClick={() => setWeight((prev) => Math.min(250, prev + 1))}
@@ -500,82 +528,99 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 												aria-label='Increase weight'
 												title='Increase weight'
 												className={cn(
-													'w-12 h-12 rounded-full border flex items-center justify-center transition-all bg-[#131313]/50',
+													'w-10 h-10 rounded-full border flex items-center justify-center transition-all',
 													canIncreaseWeight
-														? 'border-white/10 text-white active:scale-90 hover:bg-[#1c1c1c]'
+														? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
 														: 'border-white/5 text-white/30 cursor-not-allowed',
 												)}
 											>
-												<Plus className='w-5 h-5' />
+												<Plus className='w-4 h-4' />
 											</button>
 										</div>
 									</div>
+									<div className='text-xs text-[#7c7c7c] bg-[#000000] border border-white/5 rounded-lg p-2.5'>
+										Used to calculate your recommended daily creatine dose.
+									</div>
 								</div>
 
-								<div className='space-y-4'>
-									<label className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-										Performance Level
+								{/* Performance Goal Section */}
+								<div className='bg-[#0e0e0e] border border-white/5 rounded-xl p-5 space-y-3'>
+									<label className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase block'>
+										Performance Goal
 									</label>
-									<div className='grid grid-cols-2 gap-3'>
+									<div className='grid grid-cols-2 gap-2'>
 										<button
 											onClick={() => setPerfGoal('gym')}
 											className={cn(
-												'rounded-xl p-4 text-left transition-all border',
+												'rounded-lg p-3 text-left transition-all border text-xs',
 												perfGoal === 'gym'
-													? 'bg-[#00fdc1]/20 border-[#00fdc1]/40 ring-2 ring-[#00fdc1]'
-													: 'bg-[#262626]/40 border-white/5 grayscale opacity-70',
+													? 'bg-[#00fdc1]/15 border-[#00fdc1]/40 ring-1 ring-[#00fdc1]/50'
+													: 'bg-[#1a1a1a] border-white/5 opacity-60 hover:opacity-100',
 											)}
 										>
-											<span
-												className={cn(
-													'block font-bold mb-1',
-													perfGoal === 'gym' ? 'text-[#00fdc1]' : 'text-white',
-												)}
-											>
-												Gym
-											</span>
-											<span className='text-[10px] text-[#ababab] leading-tight'>
-												Standard maintenance (0.1g/kg, max 10g).
+											<div className='flex items-center gap-2 mb-1.5'>
+												<Target className='w-3.5 h-3.5 text-[#00fdc1]' />
+												<span className='block font-bold text-xs'>Gym</span>
+											</div>
+											<span className='text-[10px] text-[#ababab] block leading-tight'>
+												0.1g/kg (max 10g)
 											</span>
 										</button>
 										<button
 											onClick={() => setPerfGoal('gym_more')}
 											className={cn(
-												'rounded-xl p-4 text-left transition-all border',
+												'rounded-lg p-3 text-left transition-all border text-xs',
 												perfGoal === 'gym_more'
-													? 'bg-[#00fdc1]/20 border-[#00fdc1]/40 ring-2 ring-[#00fdc1]'
-													: 'bg-[#262626]/40 border-white/5 grayscale opacity-70',
+													? 'bg-[#00fdc1]/15 border-[#00fdc1]/40 ring-1 ring-[#00fdc1]/50'
+													: 'bg-[#1a1a1a] border-white/5 opacity-60 hover:opacity-100',
 											)}
 										>
-											<span
-												className={cn(
-													'block font-bold mb-1',
-													perfGoal === 'gym_more' ? 'text-[#00fdc1]' : 'text-white',
-												)}
-											>
-												Gym & More
-											</span>
-											<span className='text-[10px] text-[#ababab] leading-tight'>
-												High intensity (0.2g/kg, max 22g).
+											<div className='flex items-center gap-2 mb-1.5'>
+												<Zap className='w-3.5 h-3.5 text-[#7f98ff]' />
+												<span className='block font-bold text-xs'>Gym & More</span>
+											</div>
+											<span className='text-[10px] text-[#ababab] block leading-tight'>
+												0.2g/kg (max 22g)
 											</span>
 										</button>
 									</div>
 								</div>
 
-								<div className='pt-4'>
-									<div className='flex justify-between items-center mb-6 px-2'>
-										<span className='text-[#ababab] text-sm italic'>Recommended Dose:</span>
-										<span className='text-2xl font-headline font-extrabold text-[#00fdc1]'>
-											{recommendedDose}g
+								{/* Recommendation Box */}
+								<div className='bg-gradient-to-br from-[#00fdc1]/10 to-[#00fdc1]/5 border border-[#00fdc1]/20 rounded-xl p-4'>
+									<div className='flex items-center gap-2 mb-2'>
+										<Info className='w-4 h-4 text-[#00fdc1]' />
+										<span className='text-xs font-bold text-[#ababab] uppercase tracking-wide'>
+											Calculated Result
 										</span>
 									</div>
-									<button
-										onClick={handleApplyCalibration}
-										className='w-full bg-white text-black py-4 rounded-full font-headline font-extrabold text-sm uppercase tracking-widest active:scale-95 transition-all shadow-xl'
-									>
-										Apply Result
-									</button>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-4xl font-headline font-black text-[#00fdc1]'>
+											{recommendedDose}
+										</span>
+										<span className='text-lg font-bold text-[#ababab]'>grams</span>
+									</div>
+									<p className='text-xs text-[#7c7c7c] mt-2'>
+										Recommended daily dose based on {weight}kg and{' '}
+										{perfGoal === 'gym' ? 'standard' : 'high intensity'} training.
+									</p>
 								</div>
+							</div>
+
+							{/* Action Buttons - Fixed Footer */}
+							<div className='bg-gradient-to-t from-[#111111] to-[#111111]/95 px-5 py-3 border-t border-white/5 flex gap-2 flex-shrink-0'>
+								<button
+									onClick={() => setIsCalibrating(false)}
+									className='flex-1 h-10 rounded-full border border-white/10 text-white font-headline font-bold text-xs uppercase tracking-wider hover:bg-white/5 transition-all active:scale-95'
+								>
+									Cancel
+								</button>
+								<button
+									onClick={handleApplyCalibration}
+									className='flex-1 h-10 rounded-full bg-gradient-to-r from-[#00edb4] to-[#aaffdc] text-[#004734] font-headline font-extrabold text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-[#00fdc1]/10 hover:shadow-[#00fdc1]/20'
+								>
+									Apply
+								</button>
 							</div>
 						</motion.div>
 					</div>
