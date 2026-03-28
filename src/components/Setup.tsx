@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, ShieldCheck, FlaskConical, Plus, Minus } from 'lucide-react';
+import { ArrowRight, Plus, Minus } from 'lucide-react';
 import { Settings } from '../lib/storage';
 import { cn } from '../lib/utils';
 
@@ -35,7 +35,7 @@ export default function Setup({ onComplete }: SetupProps) {
 			<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className='text-center mb-6'>
 				<h1 className='font-headline font-extrabold text-4xl tracking-tight mb-2'>Creatine Setup</h1>
 				<p className='text-[#ababab] text-xs max-w-[280px] mx-auto leading-relaxed'>
-					All data remains encrypted on your device.
+					All data stays local on this device and is not sent to a server.
 				</p>
 			</motion.div>
 
@@ -179,11 +179,15 @@ export default function Setup({ onComplete }: SetupProps) {
 				transition={{ delay: 0.2 }}
 				className='w-full mt-8 space-y-4'
 			>
+				<p className='text-[10px] text-[#7c7c7c] text-center leading-relaxed'>
+					Tracking day resets at <span className='text-[#ababab] font-bold'>04:30</span> by default. Entries
+					before reset count toward the previous day.
+				</p>
 				<button
 					onClick={() => onComplete({ dailyGoal, portionSize, weight, goal: perfGoal })}
 					className='w-full h-16 rounded-full bg-gradient-to-r from-[#00edb4] to-[#aaffdc] font-headline font-extrabold text-[#004734] uppercase tracking-widest text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl shadow-[#00fdc1]/10'
 				>
-					Start Protocol
+					Start Tracking
 					<ArrowRight className='w-5 h-5' />
 				</button>
 			</motion.div>

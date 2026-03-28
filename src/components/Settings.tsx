@@ -71,6 +71,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 		}));
 	};
 
+	const resetTimeDisplay = state.settings.resetTime || '04:30';
+
 	return (
 		<div className='space-y-8'>
 			<section>
@@ -188,8 +190,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 					<div className='relative z-10'>
 						<h3 className='font-headline font-bold text-lg mb-2'>Calculate by Weight</h3>
 						<p className='text-[#ababab] text-sm mb-6 leading-relaxed'>
-							Our algorithm utilizes a precision ratio based on your mass and goals to optimize ATP
-							regeneration.
+							The algorithm calculates recomended gram based on your mass. (0.1g/kg for gym, 0.2g/kg for
+							gym & more)
 						</p>
 						<button
 							onClick={() => setIsCalibrating(true)}
@@ -215,12 +217,10 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 							<div className='flex flex-col'>
 								<span className='text-sm font-bold text-white'>Daily Reset Time</span>
 								<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
-									Current: {state.settings.resetTime || '04:30'}
+									Current: {resetTimeDisplay}
 								</span>
 							</div>
-							<span className='text-xl font-headline font-black text-[#00fdc1]'>
-								{state.settings.resetTime || '04:30'}
-							</span>
+							<span className='text-xl font-headline font-black text-[#00fdc1]'>{resetTimeDisplay}</span>
 						</div>
 						<input
 							id='settings-reset-time'
@@ -243,7 +243,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
 						/>
 						<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
-							Creatine intake does not carry over to the next day.
+							Your tracking day closes at {resetTimeDisplay}. Logs before that time count toward the
+							previous day; logs after it count toward the current day.
 						</p>
 					</div>
 

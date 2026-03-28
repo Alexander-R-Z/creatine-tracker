@@ -1,0 +1,17 @@
+{
+	"name": "Creatine Tracker",
+	"short_name": "Creatine",
+	"description": "Local-only creatine intake tracker.",
+	"start_url": "/creatine-tracker/",
+	"scope": "/creatine-tracker/",
+	"display": "standalone",
+	"background_color": "#0e0e0e",
+	"theme_color": "#0e0e0e",
+	"icons": [
+		{
+			"src": "/creatine-tracker/icons/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml"
+		}
+	]
+}

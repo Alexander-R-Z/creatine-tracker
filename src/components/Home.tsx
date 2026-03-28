@@ -206,6 +206,9 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 								</span>
 							</div>
 						</div>
+						<p className='text-[9px] text-[#5e5e5e] mt-3 uppercase tracking-widest'>
+							Tracking day resets at {state.settings.resetTime || '04:30'}
+						</p>
 					</div>
 				</div>
 			</section>
