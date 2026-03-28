@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Settings as SettingsIcon, ChevronLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { View } from '../App';
+import { Glow } from './ui';
 
 interface LayoutProps {
 	children: ReactNode;
@@ -46,8 +47,20 @@ export default function Layout({ children, currentView, setView }: LayoutProps) 
 			<main className='px-6 pt-16'>{children}</main>
 
 			{/* Ambient Glows */}
-			<div className='fixed top-0 right-0 w-[500px] h-[500px] bg-[#00fdc1]/5 rounded-full blur-[120px] -z-20 pointer-events-none translate-x-1/2 -translate-y-1/2' />
-			<div className='fixed bottom-0 left-0 w-[400px] h-[400px] bg-[#7f98ff]/5 rounded-full blur-[100px] -z-20 pointer-events-none -translate-x-1/2 translate-y-1/2' />
+			<Glow
+				color='primary'
+				position='top-right'
+				size='w-[500px] h-[500px]'
+				blurSize='blur-[120px]'
+				className='fixed -z-20 translate-x-1/2 -translate-y-1/2'
+			/>
+			<Glow
+				color='secondary'
+				position='bottom-left'
+				size='w-[400px] h-[400px]'
+				blurSize='blur-[100px]'
+				className='fixed -z-20 -translate-x-1/2 translate-y-1/2'
+			/>
 		</div>
 	);
 }

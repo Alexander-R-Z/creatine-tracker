@@ -1,14 +1,31 @@
 @import 'tailwindcss';
+@import './styles/tokens.css';
 
 @theme {
-	--font-sans: ui-sans-serif, system-ui, sans-serif;
-	--font-headline: ui-sans-serif, system-ui, sans-serif;
-	--color-secondary: #4a3b30;
+	--font-sans: var(--font-sans);
+	--font-headline: var(--font-headline);
+	--color-primary: var(--color-primary);
+	--color-secondary: var(--color-secondary);
+	--color-tertiary: var(--color-tertiary);
+	--color-accent-positive: var(--color-accent-positive);
+	--color-accent-destructive: var(--color-accent-destructive);
+	--color-bg-0: var(--color-bg-0);
+	--color-bg-1: var(--color-bg-1);
+	--color-bg-2: var(--color-bg-2);
+	--color-bg-3: var(--color-bg-3);
+	--color-bg-4: var(--color-bg-4);
+	--color-text-primary: var(--color-text-primary);
+	--color-text-secondary: var(--color-text-secondary);
+	--color-text-tertiary: var(--color-text-tertiary);
+	--radius-md: var(--radius-md);
+	--radius-lg: var(--radius-lg);
+	--radius-xl: var(--radius-xl);
+	--radius-full: var(--radius-full);
 }
 
 body {
-	background-color: #000000;
-	color: #ffffff;
+	background-color: var(--color-bg-0);
+	color: var(--color-text-primary);
 	font-family: var(--font-sans);
 	-webkit-font-smoothing: antialiased;
 }

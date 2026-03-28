@@ -41,7 +41,7 @@ export default function History({ state, updateState }: HistoryProps) {
 			{/* Recent Activity */}
 			<section className='space-y-4 relative'>
 				<div className='pointer-events-none absolute -right-10 -top-10 w-48 h-48 bg-[#00fdc1]/6 blur-[90px] rounded-full' />
-				<div className='pointer-events-none absolute -left-10 top-20 w-44 h-44 bg-secondary/10 blur-[95px] rounded-full' />
+				<div className='pointer-events-none absolute -left-10 top-20 w-44 h-44 bg-[#4a3b30]/14 blur-[95px] rounded-full' />
 				<div className='flex items-center gap-2 mb-2'>
 					<Calendar className='text-[#00fdc1] w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
@@ -56,23 +56,35 @@ export default function History({ state, updateState }: HistoryProps) {
 						const isToday = idx === 0;
 						const isEditing = editingDate === dateStr;
 						const isCompleted = log.total >= state.settings.dailyGoal;
+						const hasIntake = log.total > 0;
+						const isPartial = hasIntake && !isCompleted;
 
 						return (
 							<div
 								key={dateStr}
 								className={cn(
-									'bg-[#171717]/90 backdrop-blur-xl rounded-2xl p-4 border transition-all relative overflow-hidden',
+									'bg-[#171717]/90 backdrop-blur-xl rounded-[1.5rem] p-4 border transition-all relative overflow-hidden',
+									(isToday || isEditing) && 'min-h-[7.5rem] flex items-center',
 									isEditing ? 'border-[#00fdc1]/50' : 'border-white/5',
 								)}
 							>
 								<div
 									className={cn(
 										'pointer-events-none absolute -right-14 -top-14 w-40 h-40 rounded-full blur-3xl transition-opacity',
-										isCompleted ? 'bg-[#00fdc1]/12 opacity-100' : 'bg-secondary/10 opacity-80',
+										isCompleted
+											? 'bg-[#00fdc1]/12 opacity-100'
+											: isPartial
+												? 'bg-secondary/18 opacity-100'
+												: 'opacity-0',
 									)}
 								/>
-								<div className='pointer-events-none absolute -left-10 -bottom-12 w-32 h-32 rounded-full bg-secondary/8 blur-3xl' />
-								<div className='flex items-center justify-between relative z-10'>
+								<div
+									className={cn(
+										'pointer-events-none absolute -left-10 -bottom-12 w-32 h-32 rounded-full blur-3xl',
+										isPartial ? 'bg-[#4a3b30]/20' : 'bg-[#4a3b30]/16',
+									)}
+								/>
+								<div className='flex items-center justify-between relative z-10 w-full'>
 									<div className='flex flex-col'>
 										<span
 											className={cn(
@@ -88,24 +100,24 @@ export default function History({ state, updateState }: HistoryProps) {
 									</div>
 
 									{isEditing ? (
-										<div className='flex items-center gap-3'>
-											<div className='flex items-center gap-2'>
+										<div className='flex items-center gap-4'>
+											<div className='flex items-center gap-3'>
 												<button
 													aria-label='Decrease logged amount'
 													title='Decrease logged amount'
 													onClick={() => setEditValue((prev) => Math.max(0, prev - 1))}
-													className='w-8 h-8 rounded-full bg-[#131313] flex items-center justify-center text-white'
+													className='w-10 h-10 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 												>
 													<Minus className='w-4 h-4' />
 												</button>
-												<span className='text-xl font-headline font-bold text-white w-12 text-center'>
+												<span className='text-xl font-headline font-bold text-white w-14 text-center'>
 													{editValue}g
 												</span>
 												<button
 													aria-label='Increase logged amount'
 													title='Increase logged amount'
 													onClick={() => setEditValue((prev) => prev + 1)}
-													className='w-8 h-8 rounded-full bg-[#131313] flex items-center justify-center text-white'
+													className='w-10 h-10 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 												>
 													<Plus className='w-4 h-4' />
 												</button>
@@ -114,7 +126,7 @@ export default function History({ state, updateState }: HistoryProps) {
 												aria-label='Save logged amount'
 												title='Save logged amount'
 												onClick={saveEdit}
-												className='w-8 h-8 rounded-full bg-[#00fdc1] flex items-center justify-center text-[#004734]'
+												className='w-10 h-10 rounded-xl bg-[#00fdc1] border border-[#00fdc1]/30 flex items-center justify-center text-[#004734]'
 											>
 												<Check className='w-5 h-5' />
 											</button>
@@ -124,7 +136,7 @@ export default function History({ state, updateState }: HistoryProps) {
 											onClick={() => startEditing(dateStr, log.total)}
 											aria-label={`Edit logged amount for ${isToday ? 'today' : format(date, 'EEEE')}`}
 											title='Edit logged amount'
-											className='flex items-center gap-4 cursor-pointer group rounded-xl px-2 py-1 -mr-2 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00fdc1]/60 transition-all'
+											className='flex items-center gap-4 cursor-pointer group rounded-2xl px-3 py-2.5 -mr-1 min-h-[3.25rem] hover:border-white/20 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00fdc1]/60 transition-all'
 										>
 											<div className='flex flex-col items-end'>
 												<span
@@ -166,8 +178,8 @@ export default function History({ state, updateState }: HistoryProps) {
 
 			{/* Historical Archive */}
 			<section className='space-y-6 relative'>
-				<div className='pointer-events-none absolute -left-14 -top-8 w-52 h-52 bg-secondary/10 blur-[100px] rounded-full' />
-				<div className='pointer-events-none absolute -right-14 top-16 w-48 h-48 bg-[#7f98ff]/7 blur-[95px] rounded-full' />
+				<div className='pointer-events-none absolute -right-14 -top-8 w-52 h-52 bg-[#00fdc1]/6 blur-[100px] rounded-full' />
+				<div className='pointer-events-none absolute -left-14 top-16 w-48 h-48 bg-[#4a3b30]/14 blur-[95px] rounded-full' />
 				<div className='flex items-center gap-2 mb-2'>
 					<FolderArchive className='text-[#7f98ff] w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
@@ -197,19 +209,19 @@ export default function History({ state, updateState }: HistoryProps) {
 						return (
 							<div
 								key={idx}
-								className='bg-[#131313]/80 backdrop-blur-xl rounded-2xl p-5 border border-white/5 relative overflow-hidden'
+								className='bg-[#131313]/80 backdrop-blur-xl rounded-[1.5rem] p-5 border border-[#4a3b30]/25 relative overflow-hidden'
 							>
 								<div className='pointer-events-none absolute -right-16 -top-16 w-44 h-44 bg-[#00fdc1]/6 blur-3xl rounded-full' />
-								<div className='pointer-events-none absolute -left-16 -bottom-16 w-40 h-40 bg-secondary/12 blur-3xl rounded-full' />
+								<div className='pointer-events-none absolute -left-16 -bottom-16 w-40 h-40 bg-[#4a3b30]/16 blur-3xl rounded-full' />
 								<div className='flex justify-between items-start mb-4 relative z-10'>
 									<div>
 										<h3 className='font-headline font-bold text-lg text-white'>{monthName}</h3>
-										<p className='text-[#ababab] text-[10px] font-bold uppercase tracking-widest'>
+										<p className='text-[#a99280] text-[10px] font-bold uppercase tracking-widest'>
 											{year}
 										</p>
 									</div>
 									<div className='text-right'>
-										<span className='block text-xl font-headline font-black text-secondary'>
+										<span className='block text-xl font-headline font-black text-withe'>
 											{completedDays}
 											<span className='text-xs text-[#ababab] ml-0.5'>/{days.length}</span>
 										</span>

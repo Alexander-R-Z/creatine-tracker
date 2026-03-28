@@ -39,8 +39,6 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	const isGoalReached = log.total >= state.settings.dailyGoal;
 	const remaining = Math.max(0, state.settings.dailyGoal - log.total);
 
-	// Smart portion logic: if remaining is less than the intended portion, cap it
-	// But allow going beyond if manually adjusted via + button
 	const basePortion =
 		remaining > 0 && remaining < state.settings.portionSize ? remaining : state.settings.portionSize;
 	const effectivePortion = basePortion + portionModifier;
@@ -50,7 +48,6 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	const lastLoggedTime = lastEntry ? format(new Date(lastEntry.time), 'hh:mm a') : 'No logs';
 	const timeAgo = lastEntry ? `${differenceInHours(new Date(), new Date(lastEntry.time))}h ago` : 'Start now';
 
-	// Advanced Stats Calculation
 	const stats = useMemo(() => {
 		const logDates = Object.keys(state.logs).sort().reverse();
 		if (logDates.length === 0) return { currentStreak: 0, bestStreak: 0, finished: 0, active: 0, avg: 0 };
@@ -64,10 +61,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		const today = getEffectiveDate(new Date(), state.settings.resetTime);
 		const yesterday = getEffectiveDate(subDays(new Date(), 1), state.settings.resetTime);
 
-		// Calculate streaks and totals
 		const sortedDates = Object.keys(state.logs).sort();
 
-		// For current streak, we need to check from today backwards
 		let checkDate = today;
 		if (getLogForDate(state, today).total < state.settings.dailyGoal) {
 			checkDate = yesterday;
@@ -75,7 +70,6 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 		let streakActive = true;
 		let d = new Date();
-		// Adjust d to the effective checkDate
 		if (checkDate === yesterday) d = subDays(d, 1);
 
 		while (streakActive) {
@@ -89,8 +83,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			}
 		}
 
-		// Best streak and other totals
-		sortedDates.forEach((dateStr, index) => {
+		sortedDates.forEach((dateStr) => {
 			const dLog = state.logs[dateStr];
 			totalGrams += dLog.total;
 
@@ -131,7 +124,6 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		setIsCorrectingToday(false);
 	};
 
-	// Weekly Data for the chart: anchor to effective dates so it stays correct around reset time.
 	const weeklyData = Array.from({ length: 7 }).map((_, i) => {
 		const effectiveDate = getEffectiveDate(subDays(new Date(), 6 - i), state.settings.resetTime);
 		const dLog = getLogForDate(state, effectiveDate);
@@ -155,7 +147,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			{/* Hero Progress - Bento Style */}
 			<section className='w-full mt-4'>
 				<div className='w-full bg-[#111111] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden'>
-					<div className='absolute -right-20 -top-20 w-64 h-64 bg-[#00fdc1]/5 blur-[100px] rounded-full' />
+					<div className='absolute -right-20 -top-20 w-64 h-64 bg-[#00fdc1]/5 blur-[100px] rounded-full pointer-events-none' />
+					<div className='absolute -left-14 -bottom-16 w-52 h-52 bg-[#4a3b30]/16 blur-[95px] rounded-full pointer-events-none' />
 
 					<div className='flex flex-col items-center text-center relative z-10'>
 						<div className='flex items-center gap-2 mb-6'>
@@ -192,9 +185,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 								transition={{ duration: 0.28, ease: 'easeOut' }}
 								className={cn(
 									'h-full',
-									isGoalReached
-										? 'bg-secondary shadow-[0_0_25px_rgba(74,59,48,0.5)]'
-										: 'bg-[#7f98ff]',
+									isGoalReached ? 'bg-tertiary shadow-[0_0_25px_rgba(74,59,48,0.6)]' : 'bg-[#7f98ff]',
 								)}
 							/>
 						</div>
@@ -202,12 +193,12 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						<div className='flex justify-between w-full px-1'>
 							<div className='flex items-center gap-1.5'>
 								<Target
-									className={cn('w-3.5 h-3.5', isGoalReached ? 'text-secondary' : 'text-[#444444]')}
+									className={cn('w-3.5 h-3.5', isGoalReached ? 'text-tertiary' : 'text-[#444444]')}
 								/>
 								<span
 									className={cn(
 										'text-[10px] font-bold uppercase tracking-widest',
-										isGoalReached ? 'text-secondary' : 'text-[#666666]',
+										isGoalReached ? 'text-tertiary' : 'text-[#666666]',
 									)}
 								>
 									{isGoalReached ? 'Complete' : `${Math.round(progress * 100)}% Amount`}
@@ -227,7 +218,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			{/* Control Panel */}
 			<div className='w-full grid grid-cols-1 gap-4'>
 				<div className='bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
-					<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#7f98ff]/10 blur-[100px] rounded-full pointer-events-none' />
+					<div className='absolute -right-16 -top-20 w-56 h-56 bg-[#00fdc1]/7 blur-[100px] rounded-full pointer-events-none' />
+					<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#4a3b30]/16 blur-[100px] rounded-full pointer-events-none' />
 					<div className='relative z-10 flex flex-col items-center gap-6 w-full'>
 						<div className='flex items-center justify-between w-full px-4'>
 							<button
@@ -253,7 +245,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 										</div>
 									)}
 								</div>
-								<span className='text-[9px] font-bold text-[#00fdc1] tracking-[0.3em] uppercase mt-1'>
+								<span className='text-[9px] font-bold text-primary tracking-[0.3em] uppercase mt-1'>
 									Next Dose
 								</span>
 							</div>
@@ -272,15 +264,15 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							onClick={handleAdd}
 							disabled={effectivePortion <= 0}
 							className={cn(
-								'w-full py-5 rounded-2xl font-headline font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.97] shadow-xl',
+								'w-full py-5 rounded-[1.5rem] font-headline font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.97] shadow-xl',
 								effectivePortion <= 0
 									? 'bg-[#1a1a1a] text-[#444444] cursor-not-allowed'
 									: isGoalReached
-										? 'bg-secondary text-white hover:opacity-90'
+										? 'bg-tertiary text-[#f1e8df] hover:opacity-90'
 										: 'bg-white text-black hover:bg-[#f0f0f0]',
 							)}
 						>
-							{isGoalReached ? 'Add Creative' : 'Add Creatine'}
+							Add Creatine
 						</button>
 
 						<div className='flex items-center gap-8'>
@@ -351,6 +343,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			{/* Activity Chart */}
 			<section className='w-full bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
 				<div className='absolute -right-16 -top-16 w-52 h-52 bg-[#00fdc1]/8 blur-[90px] rounded-full pointer-events-none' />
+				<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#4a3b30]/16 blur-[100px] rounded-full pointer-events-none' />
 				<div className='relative z-10'>
 					<button
 						onClick={() => setView('history')}
@@ -424,7 +417,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 			{/* Stats Bento Grid */}
 			<div className='grid grid-cols-2 gap-4 w-full relative'>
-				<div className='absolute -left-12 top-24 w-48 h-48 bg-[#7f98ff]/7 blur-[90px] rounded-full pointer-events-none' />
+				<div className='absolute -right-12 -top-10 w-48 h-48 bg-[#00fdc1]/7 blur-[90px] rounded-full pointer-events-none' />
+				<div className='absolute -left-12 -bottom-10 w-48 h-48 bg-[#4a3b30]/20 blur-[90px] rounded-full pointer-events-none' />
 				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
 					<div className='flex items-center gap-2 mb-3'>
 						<Flame className='w-3.5 h-3.5 text-[#ff716c]' />
@@ -433,9 +427,9 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						</span>
 					</div>
 					<span className='text-2xl font-headline font-black text-white mb-0.5'>{stats.currentStreak}d</span>
-					<span className='text-[9px] font-bold text-[#444444] uppercase tracking-wider'>Consecutive</span>
+					<span className='text-[9px] font-bold text-tertiary uppercase tracking-wider'>Consecutive</span>
 				</div>
-				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
+				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-[#4a3b30]/35'>
 					<div className='flex items-center gap-2 mb-3'>
 						<Trophy className='text-[#ffcc00] w-3.5 h-3.5' />
 						<span className='text-[9px] font-bold uppercase tracking-widest text-[#666666]'>
@@ -443,9 +437,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						</span>
 					</div>
 					<span className='text-2xl font-headline font-black text-white mb-0.5'>{stats.bestStreak}d</span>
-					<span className='text-[9px] font-bold text-[#444444] uppercase tracking-wider'>
-						All-time record
-					</span>
+					<span className='text-[9px] font-bold text-tertiary uppercase tracking-wider'>All-time record</span>
 				</div>
 				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
 					<div className='flex items-center gap-2 mb-3'>
@@ -453,7 +445,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						<span className='text-[9px] font-bold uppercase tracking-widest text-[#666666]'>Finished</span>
 					</div>
 					<span className='text-2xl font-headline font-black text-white mb-0.5'>{stats.finished}</span>
-					<span className='text-[9px] font-bold text-[#444444] uppercase tracking-wider'>Days completed</span>
+					<span className='text-[9px] font-bold text-tertiary uppercase tracking-wider'>Days completed</span>
 				</div>
 				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
 					<div className='flex items-center gap-2 mb-3'>
@@ -463,11 +455,11 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						</span>
 					</div>
 					<span className='text-2xl font-headline font-black text-white mb-0.5'>{stats.active}</span>
-					<span className='text-[9px] font-bold text-[#444444] uppercase tracking-wider'>
+					<span className='text-[9px] font-bold text-tertiary uppercase tracking-wider'>
 						Total days logged
 					</span>
 				</div>
-				<div className='col-span-2 bg-[#111111] rounded-[1.5rem] p-5 flex items-center justify-between border border-white/5'>
+				<div className='col-span-2 bg-[#111111] rounded-[1.5rem] p-5 flex items-center justify-between border border-[#4a3b30]/35'>
 					<div className='flex flex-col'>
 						<div className='flex items-center gap-2 mb-1'>
 							<Zap className='text-[#00fdc1] w-3.5 h-3.5' />
@@ -478,7 +470,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						<span className='text-2xl font-headline font-black text-white'>{stats.avg}g</span>
 					</div>
 					<div className='text-right'>
-						<span className='text-[9px] font-bold text-[#444444] uppercase tracking-wider block'>
+						<span className='text-[9px] font-bold text-tertiary uppercase tracking-wider block'>
 							Remaining Today
 						</span>
 						<span className='text-xl font-headline font-black text-[#00fdc1]'>{remaining}g</span>

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Plus, Minus } from 'lucide-react';
 import { Settings } from '../lib/storage';
 import { cn } from '../lib/utils';
+import { Button, Card } from './ui';
 
 interface SetupProps {
 	onComplete: (settings: Settings) => void;

@@ -1,0 +1,207 @@
+/* ==================== DESIGN TOKENS ==================== */
+/* Central design system - extracted from Home.tsx as the reference design */
+
+:root {
+	/* ========== COLOR PALETTE ========== */
+
+	/* Primary Colors */
+	--color-primary: #00fdc1; /* Cyan - goals, interactive elements */
+	--color-primary-dim: rgba(0, 253, 193, 0.05);
+	--color-primary-glow: rgba(0, 253, 193, 0.35);
+
+	/* Secondary Colors */
+	--color-secondary: #7f98ff; /* Periwinkle - daily goal indicators */
+	--color-secondary-dim: rgba(127, 152, 255, 0.1);
+	--color-secondary-glow: rgba(127, 152, 255, 0.05);
+
+	/* Tertiary Colors */
+	--color-tertiary: #4a3b30; /* Warm brown - goal-reached state */
+	--color-tertiary-glow: rgba(74, 59, 48, 0.5);
+
+	/* Accent Colors */
+	--color-accent-positive: #00edb4; /* Green - CTA start gradient */
+	--color-accent-positive-end: #aaffdc; /* Green end - CTA end gradient */
+	--color-accent-destructive: #ff716c; /* Red - destructive actions */
+
+	/* Neutral - Background */
+	--color-bg-0: #0e0e0e; /* Main page background (darkest) */
+	--color-bg-1: #111111; /* Primary card background */
+	--color-bg-2: #131313; /* Secondary card background (elevated) */
+	--color-bg-3: #171717; /* Tertiary background (history items) */
+	--color-bg-4: #262626; /* Quaternary background (buttons, interactive) */
+	--color-bg-5: #1a1a1a; /* Disabled/inactive backgrounds */
+
+	/* Neutral - Text */
+	--color-text-primary: #ffffff; /* Primary text */
+	--color-text-secondary: #ababab; /* Secondary text/labels */
+	--color-text-tertiary: #666666; /* Muted/disabled text */
+	--color-text-quaternary: #555555; /* Very muted text */
+	--color-text-disabled: #444444; /* Disabled text */
+	--color-text-disabled-dark: #333333; /* Disabled text (darker) */
+
+	/* Neutral - Borders & Dividers */
+	--color-border-subtle: rgba(255, 255, 255, 0.05);
+	--color-border-default: rgba(255, 255, 255, 0.1);
+
+	/* ========== SPACING SCALE ========== */
+	/* Base unit: 4px (Tailwind default) */
+	--space-0: 0;
+	--space-1: 0.25rem; /* 4px */
+	--space-1-5: 0.375rem; /* 6px */
+	--space-2: 0.5rem; /* 8px */
+	--space-3: 0.75rem; /* 12px */
+	--space-4: 1rem; /* 16px */
+	--space-5: 1.25rem; /* 20px */
+	--space-6: 1.5rem; /* 24px */
+	--space-7: 1.75rem; /* 28px */
+	--space-8: 2rem; /* 32px - standard card padding */
+	--space-9: 2.25rem; /* 36px */
+	--space-10: 2.5rem; /* 40px */
+	--space-12: 3rem; /* 48px - hero section padding */
+	--space-16: 4rem; /* 64px */
+
+	/* ========== BORDER RADIUS ========== */
+	--radius-none: 0;
+	--radius-sm: 0.375rem; /* 6px - small elements */
+	--radius-md: 0.5rem; /* 8px - default radius */
+	--radius-lg: 1rem; /* 16px - standard radius */
+	--radius-xl: 1.5rem; /* 24px - cards */
+	--radius-2xl: 2rem; /* 32px - large cards */
+	--radius-3xl: 2.5rem; /* 40px - hero/bento sections */
+	--radius-full: 9999px; /* Circular buttons */
+
+	/* ========== SHADOWS & GLOWS ========== */
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+	--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+	--shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+	/* Semantic glows */
+	--glow-primary: 0 0 8px var(--color-primary-glow);
+	--glow-secondary: 0 0 20px rgba(127, 152, 255, 0.2);
+	--glow-tertiary: 0 0 25px var(--color-tertiary-glow);
+	--glow-dim: 0 0 30px var(--color-primary-dim);
+
+	/* ========== BLUR SCALE ========== */
+	--blur-sm: 12px;
+	--blur-md: 40px;
+	--blur-lg: 100px;
+	--blur-xl: 120px;
+
+	/* ========== TYPOGRAPHY ========== */
+	--font-sans: ui-sans-serif, system-ui, sans-serif;
+	--font-headline: ui-sans-serif, system-ui, sans-serif;
+
+	/* Font weights */
+	--font-weight-normal: 400;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+	--font-weight-extrabold: 800;
+	--font-weight-black: 900;
+
+	/* Font sizes - semantic */
+	--font-size-xs: 0.625rem; /* 10px - tiny labels */
+	--font-size-sm: 0.875rem; /* 14px - body text */
+	--font-size-base: 1rem; /* 16px - default */
+	--font-size-lg: 1.25rem; /* 20px - subheadings */
+	--font-size-xl: 1.5rem; /* 24px - section titles */
+	--font-size-2xl: 2rem; /* 32px - headings */
+	--font-size-3xl: 1.875rem; /* 30px - card titles */
+	--font-size-4xl: 2.25rem; /* 36px - large headings */
+	--font-size-8xl: 6rem; /* 96px - hero number */
+
+	/* Line heights */
+	--line-height-tight: 1.2;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.75;
+
+	/* Letter spacing */
+	--letter-spacing-none: 0;
+	--letter-spacing-tight: -0.01em;
+	--letter-spacing-normal: 0;
+	--letter-spacing-wide: 0.025em;
+	--letter-spacing-wider: 0.05em;
+	--letter-spacing-widest: 0.1em;
+	--letter-spacing-track-sm: 0.2em;
+	--letter-spacing-track-md: 0.4em;
+
+	/* ========== TRANSITIONS & ANIMATIONS ========== */
+	--transition-fast: 150ms;
+	--transition-base: 200ms;
+	--transition-slow: 300ms;
+	--transition-slower: 500ms;
+
+	--easing-linear: linear;
+	--easing-easeout: cubic-bezier(0.4, 0, 0.2, 1);
+	--easing-easein: cubic-bezier(0.4, 0, 1, 1);
+	--easing-easeinout: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* Semantic animation durations */
+	--animation-progress-bar: 280ms;
+	--animation-number-transition: 150ms;
+	--animation-element-entrance: 150ms;
+	--animation-page-transition: 300ms;
+
+	/* ========== BREAKPOINTS ========== */
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 1024px;
+	--breakpoint-xl: 1280px;
+
+	/* ========== CONTAINER ========== */
+	--container-max-width: 28rem; /* 448px - mobile-first max width */
+	--container-padding: var(--space-6);
+
+	/* ========== Z-INDEX SCALE ========== */
+	--z-auto: auto;
+	--z-0: 0;
+	--z-10: 10;
+	--z-20: 20;
+	--z-30: 30;
+	--z-40: 40;
+	--z-50: 50;
+	--z-negative: -1;
+	--z-background: -20;
+	--z-decoration: -10;
+}
+
+/* ==================== SEMANTIC COMPONENT TOKENS ==================== */
+
+:root {
+	/* Button base styles */
+	--button-padding-y: var(--space-4);
+	--button-padding-x: var(--space-6);
+	--button-border-radius: var(--radius-lg);
+	--button-transition: all var(--transition-base) var(--easing-easeout);
+	--button-font-weight: var(--font-weight-black);
+	--button-font-size: var(--font-size-sm);
+	--button-letter-spacing: var(--letter-spacing-track-sm);
+
+	/* Card base styles */
+	--card-padding: var(--space-8);
+	--card-border-radius: var(--radius-3xl);
+	--card-border: 1px solid var(--color-border-subtle);
+	--card-background: var(--color-bg-1);
+	--card-shadow: var(--shadow-2xl);
+
+	/* Progress bar styles */
+	--progress-height: 0.375rem; /* 6px */
+	--progress-border-radius: var(--radius-full);
+	--progress-animation-duration: var(--animation-progress-bar);
+	--progress-animation-easing: var(--easing-easeout);
+
+	/* Label styles */
+	--label-font-size: var(--font-size-xs);
+	--label-font-weight: var(--font-weight-bold);
+	--label-letter-spacing: var(--letter-spacing-widest);
+	--label-color: var(--color-text-tertiary);
+
+	/* Hero section styles */
+	--hero-padding: var(--space-8);
+	--hero-border-radius: var(--radius-3xl);
+	--hero-number-size: var(--font-size-8xl);
+	--hero-number-weight: var(--font-weight-black);
+	--hero-glow-size: 16rem; /* 256px */
+	--hero-glow-blur: var(--blur-lg);
+}

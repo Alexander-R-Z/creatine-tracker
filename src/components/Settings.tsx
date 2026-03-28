@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Minus, Calculator, X, Settings as SettingsIcon, Trash2, Download, Upload } from 'lucide-react';
 import { AppState, Settings as SettingsType } from '../lib/storage';
 import { cn } from '../lib/utils';
+import { Button, Card } from './ui';
 import {
 	applyImportedState,
 	createBackupPayload,
@@ -165,22 +166,23 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 		<div className='space-y-8'>
 			<section>
 				<h2 className='font-headline text-3xl font-extrabold tracking-tight mb-1'>Settings</h2>
-				<p className='text-[#ababab] text-sm'>Fine-tune your parameters.</p>
+				<p className='text-[#b8a697] text-sm'>Fine-tune your parameters.</p>
 			</section>
 
 			{/* Performance Goals Section */}
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
 						Performance Goals
 					</span>
 				</div>
-				<p className='text-[11px] text-[#7e7e7e]'>Values save instantly. Use +/- to adjust your targets.</p>
+				<p className='text-[11px] text-[#9a897c]'>Values save instantly. Use +/- to adjust your targets.</p>
 
 				<div className='space-y-3'>
 					{/* Daily Amount Card */}
-					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-2xl flex items-center justify-between border border-white/5'>
+					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
+						<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
 						<div className='flex flex-col'>
 							<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
 								Daily Amount
@@ -219,7 +221,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 					</div>
 
 					{/* Portion Size Card */}
-					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-2xl flex items-center justify-between border border-white/5'>
+					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
+						<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
 						<div className='flex flex-col'>
 							<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
 								Portion Size
@@ -269,12 +272,13 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<Calculator className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
 						Smart Calibration
 					</span>
 				</div>
-				<div className='bg-[#131313] p-6 rounded-2xl border border-white/5 relative overflow-hidden'>
+				<div className='bg-[#131313] p-6 rounded-[1.5rem] border border-[#4a3b30]/25 relative overflow-hidden'>
 					<div className='absolute -right-4 -top-4 w-24 h-24 bg-[#00fdc1]/5 blur-3xl rounded-full' />
+					<div className='absolute -left-10 -bottom-12 w-36 h-36 bg-[#4a3b30]/14 blur-[95px] rounded-full pointer-events-none' />
 					<div className='relative z-10'>
 						<h3 className='font-headline font-bold text-lg mb-2'>Calculate by Weight</h3>
 						<p className='text-[#ababab] text-sm mb-6 leading-relaxed'>
@@ -294,13 +298,14 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			{/* System Section */}
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
-					<SettingsIcon className='text-[#ababab] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+					<SettingsIcon className='text-[#b7a79a] w-4 h-4' />
+					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
 						System
 					</span>
 				</div>
 				<div className='space-y-4'>
-					<div className='p-5 bg-[#131313] rounded-2xl border border-white/5 space-y-4'>
+					<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+						<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
 						<div className='flex justify-between items-center'>
 							<div className='flex flex-col'>
 								<span className='text-sm font-bold text-white'>Daily Reset Time</span>
@@ -336,7 +341,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 						</p>
 					</div>
 
-					<div className='p-5 bg-[#131313] rounded-2xl border border-white/5 space-y-4'>
+					<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+						<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
 						<div className='flex justify-between items-center'>
 							<div className='flex flex-col'>
 								<span className='text-sm font-bold text-white'>Entry History Retention</span>
@@ -389,11 +395,12 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			<section className='space-y-4'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+					<span className='text-xs font-headline font-bold tracking-widest text-[#b7a79a] uppercase'>
 						Data Backup
 					</span>
 				</div>
-				<div className='p-5 bg-[#131313] rounded-2xl border border-white/5 space-y-4'>
+				<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+					<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
 					<p className='text-[11px] text-[#8a8a8a] leading-relaxed'>
 						Backups are local JSON files. Merge mode replaces matching days with imported values and can be
 						rolled back for 7 days.
@@ -446,7 +453,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: 100, opacity: 0 }}
-							className='w-full max-w-md bg-[#262626]/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl'
+							className='w-full max-w-md bg-[#262626]/80 backdrop-blur-2xl rounded-[1.5rem] p-8 border border-white/10 shadow-2xl'
 						>
 							<div className='flex justify-between items-center mb-8'>
 								<h3 className='font-headline text-2xl font-extrabold'>Calibration</h3>
@@ -583,7 +590,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: 100, opacity: 0 }}
-							className='w-full max-w-md bg-[#262626]/90 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl space-y-5'
+							className='w-full max-w-md bg-[#262626]/90 backdrop-blur-2xl rounded-[1.5rem] p-6 border border-white/10 shadow-2xl space-y-5'
 						>
 							<div className='flex items-center justify-between'>
 								<h3 className='font-headline text-xl font-extrabold text-white'>Import Backup</h3>
