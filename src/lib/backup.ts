@@ -59,6 +59,11 @@ function writeMergeRollbackSnapshot(snapshot: MergeRollbackSnapshot) {
 	localStorage.setItem(MERGE_ROLLBACK_KEY, JSON.stringify(snapshot));
 }
 
+export function clearMergeRollbackSnapshot() {
+	if (typeof localStorage === 'undefined') return;
+	localStorage.removeItem(MERGE_ROLLBACK_KEY);
+}
+
 export function hasMergeRollbackSnapshot(): boolean {
 	return readMergeRollbackSnapshot() !== null;
 }
@@ -77,9 +82,7 @@ export function rollbackLastMergeImport(current: AppState): AppState {
 		restoredLogs[date] = cloneDayLog(dayLog);
 	}
 
-	if (typeof localStorage !== 'undefined') {
-		localStorage.removeItem(MERGE_ROLLBACK_KEY);
-	}
+	clearMergeRollbackSnapshot();
 
 	return {
 		...current,
@@ -113,6 +116,7 @@ export function parseBackupPayload(content: string): AppState {
 
 export function applyImportedState(current: AppState, imported: AppState, mode: ImportMode): AppState {
 	if (mode === 'replace') {
+		clearMergeRollbackSnapshot();
 		return imported;
 	}
 

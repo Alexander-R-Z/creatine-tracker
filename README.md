@@ -17,6 +17,28 @@ This project is intentionally simple and designed for very small usage (friends/
 - No backend, no account, no cloud sync, no telemetry.
 - If browser data is cleared (or you switch device/browser), data is lost unless you exported a backup.
 
+## Backup and Import
+
+The app can export/import local JSON backups from the Settings page.
+
+- Export: downloads the full current app state.
+- Import mode `Replace all data`: replaces your current local state entirely.
+- Import mode `Merge by date`: keeps current settings and imports logs by date. If a date exists in both, the imported day replaces the current day for that date.
+- Merge rollback: after a merge import, you can roll back the last merge from Settings for up to 7 days.
+
+Backup file compatibility:
+
+- Wrapped format: `{ exportedAt, app, data }`
+- Raw format: direct app state JSON
+
+Both are normalized and validated on import.
+
+## Schema and Migrations
+
+- Persisted state includes a schema `version`.
+- Legacy data without version is migrated automatically on load/import.
+- Validation runs after migration to keep invalid or partial data from breaking the app.
+
 ## Reset Time Behavior
 
 The app uses an effective day based on reset time (default `04:30`):
