@@ -421,10 +421,14 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 				<div className='absolute -left-12 -bottom-10 w-48 h-48 bg-[#4a3b30]/20 blur-[90px] rounded-full pointer-events-none' />
 				<div className='col-span-2 xl:col-span-1 bg-[#111111] rounded-[1.5rem] p-5 border border-white/5 relative overflow-hidden'>
 					<div className='absolute -right-10 -top-10 w-32 h-32 bg-[#00fdc1]/8 blur-[75px] rounded-full pointer-events-none' />
-					<div className='text-[9px] font-bold uppercase tracking-widest text-[#666666] mb-3'>Quick Status</div>
+					<div className='text-[9px] font-bold uppercase tracking-widest text-[#666666] mb-3'>
+						Quick Status
+					</div>
 					<div className='grid grid-cols-2 gap-3'>
 						<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
-							<div className='text-[8px] font-bold uppercase tracking-widest text-[#666666]'>Last Log</div>
+							<div className='text-[8px] font-bold uppercase tracking-widest text-[#666666]'>
+								Last Log
+							</div>
 							<div className='text-sm font-bold text-white mt-1'>{lastLoggedTime}</div>
 						</div>
 						<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>

@@ -182,320 +182,331 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			</section>
 
 			<div className='grid gap-6 xl:grid-cols-2 xl:items-start'>
+				{/* Performance Goals Section */}
+				<section className='space-y-4 xl:col-start-1'>
+					<div className='flex items-center gap-2 mb-2'>
+						<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
+						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+							Performance Goals
+						</span>
+					</div>
+					<p className='text-[11px] text-[#9a897c]'>Values save instantly. Use +/- to adjust your targets.</p>
 
-			{/* Performance Goals Section */}
-			<section className='space-y-4 xl:col-start-1'>
-				<div className='flex items-center gap-2 mb-2'>
-					<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-						Performance Goals
-					</span>
-				</div>
-				<p className='text-[11px] text-[#9a897c]'>Values save instantly. Use +/- to adjust your targets.</p>
-
-				<div className='space-y-3'>
-					{/* Daily Amount Card */}
-					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
-						<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
-						<div className='flex flex-col'>
-							<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
-								Daily Amount
-							</span>
-							<div className='flex items-baseline gap-1'>
-								<span className='text-2xl font-headline font-extrabold text-[#00fdc1]'>
-									{state.settings.dailyGoal}
+					<div className='space-y-3'>
+						{/* Daily Amount Card */}
+						<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
+							<div className='flex flex-col'>
+								<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
+									Daily Amount
 								</span>
-								<span className='text-[#ababab] text-sm'>grams</span>
+								<div className='flex items-baseline gap-1'>
+									<span className='text-2xl font-headline font-extrabold text-[#00fdc1]'>
+										{state.settings.dailyGoal}
+									</span>
+									<span className='text-[#ababab] text-sm'>grams</span>
+								</div>
+							</div>
+							<div className='flex items-center gap-2'>
+								<button
+									onClick={() => updateDailyGoal(state.settings.dailyGoal - 1)}
+									disabled={!canDecreaseDailyGoal}
+									aria-label='Decrease daily amount'
+									title='Decrease daily amount'
+									className={cn(
+										'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
+										canDecreaseDailyGoal
+											? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
+											: 'border-white/5 text-white/30 cursor-not-allowed',
+									)}
+								>
+									<Minus className='w-4 h-4' />
+								</button>
+								<button
+									onClick={() => updateDailyGoal(state.settings.dailyGoal + 1)}
+									aria-label='Increase daily amount'
+									title='Increase daily amount'
+									className='w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white active:scale-90 hover:bg-white/10 transition-all'
+								>
+									<Plus className='w-4 h-4' />
+								</button>
 							</div>
 						</div>
-						<div className='flex items-center gap-2'>
+
+						{/* Portion Size Card */}
+						<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
+							<div className='flex flex-col'>
+								<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
+									Portion Size
+								</span>
+								<div className='flex items-baseline gap-1'>
+									<span className='text-2xl font-headline font-extrabold text-[#7f98ff]'>
+										{state.settings.portionSize}
+									</span>
+									<span className='text-[#ababab] text-sm'>grams</span>
+								</div>
+							</div>
+							<div className='flex items-center gap-2'>
+								<button
+									onClick={() => updatePortionSize(state.settings.portionSize - 1)}
+									disabled={!canDecreasePortionSize}
+									aria-label='Decrease portion size'
+									title='Decrease portion size'
+									className={cn(
+										'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
+										canDecreasePortionSize
+											? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
+											: 'border-white/5 text-white/30 cursor-not-allowed',
+									)}
+								>
+									<Minus className='w-4 h-4' />
+								</button>
+								<button
+									onClick={() => updatePortionSize(state.settings.portionSize + 1)}
+									disabled={!canIncreasePortionSize}
+									aria-label='Increase portion size'
+									title='Increase portion size'
+									className={cn(
+										'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
+										canIncreasePortionSize
+											? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
+											: 'border-white/5 text-white/30 cursor-not-allowed',
+									)}
+								>
+									<Plus className='w-4 h-4' />
+								</button>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* Smart Calculator Section */}
+				<section className='space-y-4 xl:col-start-2 xl:row-start-1 xl:sticky xl:top-24'>
+					<div className='flex items-center gap-2 mb-2'>
+						<Calculator className='text-[#7f98ff] w-4 h-4' />
+						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+							Smart Calibration
+						</span>
+					</div>
+					<div className='bg-[#131313] p-5 rounded-[1.5rem] border border-white/10 relative overflow-hidden'>
+						<div className='absolute -right-6 -top-6 w-28 h-28 bg-[#7f98ff]/10 blur-3xl rounded-full pointer-events-none' />
+						<div className='relative z-10'>
+							<div className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#666666] mb-3'>
+								Live Snapshot
+							</div>
+							<div className='grid grid-cols-2 gap-3'>
+								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+									<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>
+										Daily Goal
+									</div>
+									<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
+										{state.settings.dailyGoal}g
+									</div>
+								</div>
+								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+									<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>
+										Portion
+									</div>
+									<div className='text-xl font-headline font-black text-[#7f98ff] mt-1'>
+										{state.settings.portionSize}g
+									</div>
+								</div>
+								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+									<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>
+										Reset
+									</div>
+									<div className='text-xl font-headline font-black text-white mt-1'>
+										{resetTimeDisplay}
+									</div>
+								</div>
+								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+									<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>
+										Suggested
+									</div>
+									<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
+										{recommendedDose}g
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div className='bg-[#131313] p-6 rounded-[1.5rem] border border-[#4a3b30]/25 relative overflow-hidden'>
+						<div className='absolute -right-4 -top-4 w-24 h-24 bg-[#00fdc1]/5 blur-3xl rounded-full' />
+						<div className='absolute -left-10 -bottom-12 w-36 h-36 bg-[#4a3b30]/14 blur-[95px] rounded-full pointer-events-none' />
+						<div className='relative z-10'>
+							<h3 className='font-headline font-bold text-lg mb-2'>Calculate by Weight</h3>
+							<p className='text-[#ababab] text-sm mb-6 leading-relaxed'>
+								The algorithm calculates recomended gram based on your mass. (0.1g/kg for gym, 0.2g/kg
+								for gym & more)
+							</p>
 							<button
-								onClick={() => updateDailyGoal(state.settings.dailyGoal - 1)}
-								disabled={!canDecreaseDailyGoal}
-								aria-label='Decrease daily amount'
-								title='Decrease daily amount'
-								className={cn(
-									'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
-									canDecreaseDailyGoal
-										? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
-										: 'border-white/5 text-white/30 cursor-not-allowed',
-								)}
+								onClick={() => setIsCalibrating(true)}
+								className='w-full bg-gradient-to-r from-[#00edb4] to-[#aaffdc] text-[#004734] py-4 rounded-full font-headline font-extrabold text-sm uppercase tracking-widest shadow-lg shadow-[#00fdc1]/10 active:scale-95 md:hover:scale-[1.02] md:hover:shadow-[0_14px_36px_rgba(0,253,193,0.22)] md:hover:from-[#10f9c6] md:hover:to-[#c3ffe9] transition-all'
 							>
-								<Minus className='w-4 h-4' />
-							</button>
-							<button
-								onClick={() => updateDailyGoal(state.settings.dailyGoal + 1)}
-								aria-label='Increase daily amount'
-								title='Increase daily amount'
-								className='w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white active:scale-90 hover:bg-white/10 transition-all'
-							>
-								<Plus className='w-4 h-4' />
+								Launch Calculator
 							</button>
 						</div>
 					</div>
+				</section>
 
-					{/* Portion Size Card */}
-					<div className='bg-[#262626]/40 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between border border-[#4a3b30]/25 relative overflow-hidden'>
-						<div className='pointer-events-none absolute -left-12 -bottom-12 w-32 h-32 bg-[#4a3b30]/12 blur-[80px] rounded-full' />
-						<div className='flex flex-col'>
-							<span className='text-xs font-semibold text-[#ababab] uppercase tracking-wider mb-1'>
-								Portion Size
-							</span>
-							<div className='flex items-baseline gap-1'>
-								<span className='text-2xl font-headline font-extrabold text-[#7f98ff]'>
-									{state.settings.portionSize}
+				{/* System Section */}
+				<section className='space-y-4 xl:col-start-1'>
+					<div className='flex items-center gap-2 mb-2'>
+						<SettingsIcon className='text-tertiary w-4 h-4' />
+						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+							System
+						</span>
+					</div>
+					<div className='space-y-4'>
+						<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+							<div className='flex justify-between items-center'>
+								<div className='flex flex-col'>
+									<span className='text-sm font-bold text-white'>Daily Reset Time</span>
+									<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+										Current: {resetTimeDisplay}
+									</span>
+								</div>
+								<span className='text-xl font-headline font-black text-[#00fdc1]'>
+									{resetTimeDisplay}
 								</span>
-								<span className='text-[#ababab] text-sm'>grams</span>
+							</div>
+							<input
+								id='settings-reset-time'
+								type='range'
+								min='0'
+								max='6'
+								step='0.5'
+								value={(() => {
+									const [h, m] = (state.settings.resetTime || '04:30').split(':').map(Number);
+									return h + m / 60;
+								})()}
+								onChange={(e) => {
+									const val = parseFloat(e.target.value);
+									const h = Math.floor(val);
+									const m = (val % 1) * 60;
+									const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+									updateResetTime(timeStr);
+								}}
+								aria-label='Daily reset time'
+								className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
+							/>
+							<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
+								Your tracking day closes at {resetTimeDisplay}. Logs before that time count toward the
+								previous day; logs after it count toward the current day.
+							</p>
+						</div>
+
+						<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+							<div className='flex justify-between items-center'>
+								<div className='flex flex-col'>
+									<span className='text-sm font-bold text-white'>Entry History Retention</span>
+									<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+										Current: {formatRetentionMonths(entryRetentionMonths)}
+									</span>
+								</div>
+								<span className='text-xl font-headline font-black text-[#00fdc1]'>
+									{formatRetentionMonths(entryRetentionMonths)}
+								</span>
+							</div>
+							<input
+								id='settings-entry-retention'
+								type='range'
+								min='3'
+								max='60'
+								step='1'
+								value={entryRetentionMonths}
+								onChange={(e) => updateEntryRetentionMonths(parseInt(e.target.value, 10))}
+								aria-label='Entry history retention in months'
+								className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
+							/>
+							<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
+								Old entries (per-entry timestamps) are automatically removed after{' '}
+								{formatRetentionMonths(entryRetentionMonths)}, but daily totals are preserved for
+								history and streak calculations.
+							</p>
+						</div>
+
+						<div className='flex items-center justify-between py-4 border-b border-white/5 opacity-40 grayscale pointer-events-none'>
+							<span className='text-white font-medium'>Notifications</span>
+							<div className='w-10 h-5 bg-[#262626] rounded-full relative'>
+								<div className='absolute left-0.5 top-0.5 w-4 h-4 bg-[#444444] rounded-full shadow-sm' />
 							</div>
 						</div>
-						<div className='flex items-center gap-2'>
+
+						<div className='pt-4'>
 							<button
-								onClick={() => updatePortionSize(state.settings.portionSize - 1)}
-								disabled={!canDecreasePortionSize}
-								aria-label='Decrease portion size'
-								title='Decrease portion size'
-								className={cn(
-									'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
-									canDecreasePortionSize
-										? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
-										: 'border-white/5 text-white/30 cursor-not-allowed',
-								)}
+								onClick={onReset}
+								className='w-full h-14 rounded-xl bg-[#1a1a1a] border border-[#ff716c]/20 flex items-center justify-center gap-3 text-[#ff716c] font-bold text-sm hover:bg-[#ff716c]/5 transition-all active:scale-[0.98]'
 							>
-								<Minus className='w-4 h-4' />
-							</button>
-							<button
-								onClick={() => updatePortionSize(state.settings.portionSize + 1)}
-								disabled={!canIncreasePortionSize}
-								aria-label='Increase portion size'
-								title='Increase portion size'
-								className={cn(
-									'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
-									canIncreasePortionSize
-										? 'border-white/10 text-white active:scale-90 hover:bg-white/10'
-										: 'border-white/5 text-white/30 cursor-not-allowed',
-								)}
-							>
-								<Plus className='w-4 h-4' />
+								<Trash2 className='w-4 h-4' />
+								Clear All Data
 							</button>
 						</div>
 					</div>
-				</div>
-			</section>
+				</section>
 
-			{/* Smart Calculator Section */}
-			<section className='space-y-4 xl:col-start-2 xl:row-start-1 xl:sticky xl:top-24'>
-				<div className='flex items-center gap-2 mb-2'>
-					<Calculator className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-						Smart Calibration
-					</span>
-				</div>
-				<div className='bg-[#131313] p-5 rounded-[1.5rem] border border-white/10 relative overflow-hidden'>
-					<div className='absolute -right-6 -top-6 w-28 h-28 bg-[#7f98ff]/10 blur-3xl rounded-full pointer-events-none' />
-					<div className='relative z-10'>
-						<div className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#666666] mb-3'>
-							Live Snapshot
-						</div>
+				{/* Data Backup Section */}
+				<section className='space-y-4 xl:col-start-2'>
+					<div className='flex items-center gap-2 mb-2'>
+						<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
+						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+							Data Backup
+						</span>
+					</div>
+					<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+						<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+						<p className='text-[11px] text-[#8a8a8a] leading-relaxed'>
+							Backups are local JSON files. Merge mode replaces matching days with imported values and can
+							be rolled back for 7 days.
+						</p>
 						<div className='grid grid-cols-2 gap-3'>
-							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
-								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Daily Goal</div>
-								<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
-									{state.settings.dailyGoal}g
-								</div>
-							</div>
-							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
-								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Portion</div>
-								<div className='text-xl font-headline font-black text-[#7f98ff] mt-1'>
-									{state.settings.portionSize}g
-								</div>
-							</div>
-							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
-								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Reset</div>
-								<div className='text-xl font-headline font-black text-white mt-1'>{resetTimeDisplay}</div>
-							</div>
-							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
-								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Suggested</div>
-								<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>{recommendedDose}g</div>
-							</div>
+							<button
+								onClick={handleExportBackup}
+								className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
+							>
+								<Download className='w-4 h-4' />
+								Export
+							</button>
+							<button
+								onClick={triggerImportFile}
+								className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
+							>
+								<Upload className='w-4 h-4' />
+								Import
+							</button>
 						</div>
-					</div>
-				</div>
-				<div className='bg-[#131313] p-6 rounded-[1.5rem] border border-[#4a3b30]/25 relative overflow-hidden'>
-					<div className='absolute -right-4 -top-4 w-24 h-24 bg-[#00fdc1]/5 blur-3xl rounded-full' />
-					<div className='absolute -left-10 -bottom-12 w-36 h-36 bg-[#4a3b30]/14 blur-[95px] rounded-full pointer-events-none' />
-					<div className='relative z-10'>
-						<h3 className='font-headline font-bold text-lg mb-2'>Calculate by Weight</h3>
-						<p className='text-[#ababab] text-sm mb-6 leading-relaxed'>
-							The algorithm calculates recomended gram based on your mass. (0.1g/kg for gym, 0.2g/kg for
-							gym & more)
-						</p>
 						<button
-							onClick={() => setIsCalibrating(true)}
-							className='w-full bg-gradient-to-r from-[#00edb4] to-[#aaffdc] text-[#004734] py-4 rounded-full font-headline font-extrabold text-sm uppercase tracking-widest shadow-lg shadow-[#00fdc1]/10 active:scale-95 md:hover:scale-[1.02] md:hover:shadow-[0_14px_36px_rgba(0,253,193,0.22)] md:hover:from-[#10f9c6] md:hover:to-[#c3ffe9] transition-all'
+							onClick={handleRollbackMergeImport}
+							disabled={!canRollbackMergeImport}
+							className={cn(
+								'w-full h-11 rounded-xl border font-semibold text-sm transition-all',
+								canRollbackMergeImport
+									? 'bg-[#1a1a1a] border-[#7f98ff]/30 text-[#7f98ff] hover:bg-[#7f98ff]/10'
+									: 'bg-[#1a1a1a] border-white/10 text-[#666666] cursor-not-allowed',
+							)}
 						>
-							Launch Calculator
+							Rollback Last Merge (7d)
 						</button>
-					</div>
-				</div>
-			</section>
-
-			{/* System Section */}
-			<section className='space-y-4 xl:col-start-1'>
-				<div className='flex items-center gap-2 mb-2'>
-					<SettingsIcon className='text-tertiary w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-						System
-					</span>
-				</div>
-				<div className='space-y-4'>
-					<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
-						<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
-						<div className='flex justify-between items-center'>
-							<div className='flex flex-col'>
-								<span className='text-sm font-bold text-white'>Daily Reset Time</span>
-								<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
-									Current: {resetTimeDisplay}
-								</span>
-							</div>
-							<span className='text-xl font-headline font-black text-[#00fdc1]'>{resetTimeDisplay}</span>
-						</div>
 						<input
-							id='settings-reset-time'
-							type='range'
-							min='0'
-							max='6'
-							step='0.5'
-							value={(() => {
-								const [h, m] = (state.settings.resetTime || '04:30').split(':').map(Number);
-								return h + m / 60;
-							})()}
-							onChange={(e) => {
-								const val = parseFloat(e.target.value);
-								const h = Math.floor(val);
-								const m = (val % 1) * 60;
-								const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-								updateResetTime(timeStr);
-							}}
-							aria-label='Daily reset time'
-							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
+							ref={fileInputRef}
+							type='file'
+							accept='application/json,.json'
+							onChange={handleImportFileChange}
+							aria-label='Choose backup JSON file'
+							title='Choose backup JSON file'
+							className='hidden'
 						/>
-						<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
-							Your tracking day closes at {resetTimeDisplay}. Logs before that time count toward the
-							previous day; logs after it count toward the current day.
-						</p>
 					</div>
-
-					<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
-						<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
-						<div className='flex justify-between items-center'>
-							<div className='flex flex-col'>
-								<span className='text-sm font-bold text-white'>Entry History Retention</span>
-								<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
-									Current: {formatRetentionMonths(entryRetentionMonths)}
-								</span>
-							</div>
-							<span className='text-xl font-headline font-black text-[#00fdc1]'>
-								{formatRetentionMonths(entryRetentionMonths)}
-							</span>
-						</div>
-						<input
-							id='settings-entry-retention'
-							type='range'
-							min='3'
-							max='60'
-							step='1'
-							value={entryRetentionMonths}
-							onChange={(e) => updateEntryRetentionMonths(parseInt(e.target.value, 10))}
-							aria-label='Entry history retention in months'
-							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
-						/>
-						<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
-							Old entries (per-entry timestamps) are automatically removed after{' '}
-							{formatRetentionMonths(entryRetentionMonths)}, but daily totals are preserved for history
-							and streak calculations.
-						</p>
-					</div>
-
-					<div className='flex items-center justify-between py-4 border-b border-white/5 opacity-40 grayscale pointer-events-none'>
-						<span className='text-white font-medium'>Notifications</span>
-						<div className='w-10 h-5 bg-[#262626] rounded-full relative'>
-							<div className='absolute left-0.5 top-0.5 w-4 h-4 bg-[#444444] rounded-full shadow-sm' />
-						</div>
-					</div>
-
-					<div className='pt-4'>
-						<button
-							onClick={onReset}
-							className='w-full h-14 rounded-xl bg-[#1a1a1a] border border-[#ff716c]/20 flex items-center justify-center gap-3 text-[#ff716c] font-bold text-sm hover:bg-[#ff716c]/5 transition-all active:scale-[0.98]'
-						>
-							<Trash2 className='w-4 h-4' />
-							Clear All Data
-						</button>
-					</div>
-				</div>
-			</section>
-
-			{/* Data Backup Section */}
-			<section className='space-y-4 xl:col-start-2'>
-				<div className='flex items-center gap-2 mb-2'>
-					<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
-					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-						Data Backup
-					</span>
-				</div>
-				<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
-					<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
-					<p className='text-[11px] text-[#8a8a8a] leading-relaxed'>
-						Backups are local JSON files. Merge mode replaces matching days with imported values and can be
-						rolled back for 7 days.
-					</p>
-					<div className='grid grid-cols-2 gap-3'>
-						<button
-							onClick={handleExportBackup}
-							className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
-						>
-							<Download className='w-4 h-4' />
-							Export
-						</button>
-						<button
-							onClick={triggerImportFile}
-							className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
-						>
-							<Upload className='w-4 h-4' />
-							Import
-						</button>
-					</div>
-					<button
-						onClick={handleRollbackMergeImport}
-						disabled={!canRollbackMergeImport}
-						className={cn(
-							'w-full h-11 rounded-xl border font-semibold text-sm transition-all',
-							canRollbackMergeImport
-								? 'bg-[#1a1a1a] border-[#7f98ff]/30 text-[#7f98ff] hover:bg-[#7f98ff]/10'
-								: 'bg-[#1a1a1a] border-white/10 text-[#666666] cursor-not-allowed',
-						)}
-					>
-						Rollback Last Merge (7d)
-					</button>
-					<input
-						ref={fileInputRef}
-						type='file'
-						accept='application/json,.json'
-						onChange={handleImportFileChange}
-						aria-label='Choose backup JSON file'
-						title='Choose backup JSON file'
-						className='hidden'
-					/>
-				</div>
-			</section>
+				</section>
 			</div>
 
 			{/* Calibration Modal */}
 			<AnimatePresence>
 				{isCalibrating && (
-					<div
-						className='fixed inset-0 z-[60] flex items-end md:items-center justify-center px-4 md:px-6 pb-10 md:pb-6 bg-black/80 backdrop-blur-sm'
-					>
+					<div className='fixed inset-0 z-[60] flex items-end md:items-center justify-center px-4 md:px-6 pb-10 md:pb-6 bg-black/80 backdrop-blur-sm'>
 						<motion.div
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
