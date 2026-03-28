@@ -1,8 +1,16 @@
-import { useState, useMemo } from 'react';
+import { ChangeEvent, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus, Calculator, X, Settings as SettingsIcon, Trash2, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, Calculator, X, Settings as SettingsIcon, Trash2, Download, Upload } from 'lucide-react';
 import { AppState, Settings as SettingsType } from '../lib/storage';
 import { cn } from '../lib/utils';
+import {
+	applyImportedState,
+	createBackupPayload,
+	hasMergeRollbackSnapshot,
+	ImportMode,
+	parseBackupPayload,
+	rollbackLastMergeImport,
+} from '../lib/backup';
 
 interface SettingsProps {
 	state: AppState;
@@ -12,8 +20,13 @@ interface SettingsProps {
 
 export default function Settings({ state, updateState, onReset }: SettingsProps) {
 	const [isCalibrating, setIsCalibrating] = useState(false);
+	const [isImportModeOpen, setIsImportModeOpen] = useState(false);
+	const [pendingImportState, setPendingImportState] = useState<AppState | null>(null);
+	const [selectedImportMode, setSelectedImportMode] = useState<ImportMode>('replace');
+	const [canRollbackMergeImport, setCanRollbackMergeImport] = useState(() => hasMergeRollbackSnapshot());
 	const [weight, setWeight] = useState(state.settings.weight || 70);
 	const [perfGoal, setPerfGoal] = useState<'gym' | 'gym_more'>(state.settings.goal || 'gym');
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const canDecreaseDailyGoal = state.settings.dailyGoal > 1;
 	const canDecreasePortionSize = state.settings.portionSize > 1;
 	const canIncreasePortionSize = state.settings.portionSize < state.settings.dailyGoal;
@@ -72,6 +85,60 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 	};
 
 	const resetTimeDisplay = state.settings.resetTime || '04:30';
+
+	const triggerImportFile = () => {
+		fileInputRef.current?.click();
+	};
+
+	const handleExportBackup = () => {
+		const payload = createBackupPayload(state);
+		const blob = new Blob([payload], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const stamp = new Date().toISOString().slice(0, 10);
+		const anchor = document.createElement('a');
+		anchor.href = url;
+		anchor.download = `creatine-tracker-backup-${stamp}.json`;
+		anchor.click();
+		URL.revokeObjectURL(url);
+	};
+
+	const handleImportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		try {
+			const content = await file.text();
+			const parsed = parseBackupPayload(content);
+			setPendingImportState(parsed);
+			setSelectedImportMode('replace');
+			setIsImportModeOpen(true);
+		} catch (error) {
+			console.error('Failed to import backup', error);
+			window.alert('Import failed. Please choose a valid backup JSON file.');
+		} finally {
+			event.target.value = '';
+		}
+	};
+
+	const applyImport = () => {
+		if (!pendingImportState) return;
+		updateState((prev) => applyImportedState(prev, pendingImportState, selectedImportMode));
+		setCanRollbackMergeImport(hasMergeRollbackSnapshot());
+		setPendingImportState(null);
+		setIsImportModeOpen(false);
+	};
+
+	const handleRollbackMergeImport = () => {
+		if (!hasMergeRollbackSnapshot()) {
+			setCanRollbackMergeImport(false);
+			window.alert('No merge rollback is currently available.');
+			return;
+		}
+
+		updateState((prev) => rollbackLastMergeImport(prev));
+		setCanRollbackMergeImport(false);
+		window.alert('Last merge import was rolled back successfully.');
+	};
 
 	return (
 		<div className='space-y-8'>
@@ -267,6 +334,59 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 				</div>
 			</section>
 
+			{/* Data Backup Section */}
+			<section className='space-y-4'>
+				<div className='flex items-center gap-2 mb-2'>
+					<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
+					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
+						Data Backup
+					</span>
+				</div>
+				<div className='p-5 bg-[#131313] rounded-2xl border border-white/5 space-y-4'>
+					<p className='text-[11px] text-[#8a8a8a] leading-relaxed'>
+						Backups are local JSON files. Merge mode replaces matching days with imported values and can be
+						rolled back for 7 days.
+					</p>
+					<div className='grid grid-cols-2 gap-3'>
+						<button
+							onClick={handleExportBackup}
+							className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
+						>
+							<Download className='w-4 h-4' />
+							Export
+						</button>
+						<button
+							onClick={triggerImportFile}
+							className='w-full h-11 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center gap-2 text-white font-semibold text-sm hover:bg-white/5 transition-all'
+						>
+							<Upload className='w-4 h-4' />
+							Import
+						</button>
+					</div>
+					<button
+						onClick={handleRollbackMergeImport}
+						disabled={!canRollbackMergeImport}
+						className={cn(
+							'w-full h-11 rounded-xl border font-semibold text-sm transition-all',
+							canRollbackMergeImport
+								? 'bg-[#1a1a1a] border-[#7f98ff]/30 text-[#7f98ff] hover:bg-[#7f98ff]/10'
+								: 'bg-[#1a1a1a] border-white/10 text-[#666666] cursor-not-allowed',
+						)}
+					>
+						Rollback Last Merge (7d)
+					</button>
+					<input
+						ref={fileInputRef}
+						type='file'
+						accept='application/json,.json'
+						onChange={handleImportFileChange}
+						aria-label='Choose backup JSON file'
+						title='Choose backup JSON file'
+						className='hidden'
+					/>
+				</div>
+			</section>
+
 			{/* Calibration Modal */}
 			<AnimatePresence>
 				{isCalibrating && (
@@ -398,6 +518,91 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 										Apply Result
 									</button>
 								</div>
+							</div>
+						</motion.div>
+					</div>
+				)}
+			</AnimatePresence>
+
+			{/* Import Mode Modal */}
+			<AnimatePresence>
+				{isImportModeOpen && pendingImportState && (
+					<div className='fixed inset-0 z-[70] flex items-end justify-center px-4 pb-10 bg-black/80 backdrop-blur-sm'>
+						<motion.div
+							initial={{ y: 100, opacity: 0 }}
+							animate={{ y: 0, opacity: 1 }}
+							exit={{ y: 100, opacity: 0 }}
+							className='w-full max-w-md bg-[#262626]/90 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl space-y-5'
+						>
+							<div className='flex items-center justify-between'>
+								<h3 className='font-headline text-xl font-extrabold text-white'>Import Backup</h3>
+								<button
+									onClick={() => {
+										setIsImportModeOpen(false);
+										setPendingImportState(null);
+									}}
+									aria-label='Close import modal'
+									title='Close import modal'
+									className='text-[#ababab] hover:text-white'
+								>
+									<X className='w-5 h-5' />
+								</button>
+							</div>
+
+							<p className='text-[12px] text-[#a4a4a4] leading-relaxed'>
+								Choose how to apply imported data. Replace overwrites everything. Merge keeps current
+								settings and replaces matching days with imported values.
+							</p>
+
+							<div className='space-y-3'>
+								<button
+									onClick={() => setSelectedImportMode('replace')}
+									className={cn(
+										'w-full rounded-xl p-4 text-left border transition-all',
+										selectedImportMode === 'replace'
+											? 'bg-[#ff716c]/10 border-[#ff716c]/40 ring-1 ring-[#ff716c]/50'
+											: 'bg-[#1a1a1a] border-white/10',
+									)}
+								>
+									<div className='text-sm font-bold text-white mb-1'>Replace all data</div>
+									<div className='text-[11px] text-[#999999]'>
+										Current logs and settings are replaced completely by the imported backup.
+									</div>
+								</button>
+
+								<button
+									onClick={() => setSelectedImportMode('merge')}
+									className={cn(
+										'w-full rounded-xl p-4 text-left border transition-all',
+										selectedImportMode === 'merge'
+											? 'bg-[#00fdc1]/10 border-[#00fdc1]/40 ring-1 ring-[#00fdc1]/50'
+											: 'bg-[#1a1a1a] border-white/10',
+									)}
+								>
+									<div className='text-sm font-bold text-white mb-1'>Merge by date</div>
+									<div className='text-[11px] text-[#999999]'>
+										Matching days are replaced by imported data. Current settings stay. You can
+										rollback the last merge for 7 days.
+									</div>
+								</button>
+							</div>
+
+							<div className='flex gap-2'>
+								<button
+									onClick={() => {
+										setIsImportModeOpen(false);
+										setPendingImportState(null);
+									}}
+									className='flex-1 h-11 rounded-xl bg-[#1a1a1a] border border-white/10 text-[#ababab] font-semibold'
+								>
+									Cancel
+								</button>
+								<button
+									onClick={applyImport}
+									className='flex-1 h-11 rounded-xl bg-white text-black font-semibold'
+								>
+									Import
+								</button>
 							</div>
 						</motion.div>
 					</div>

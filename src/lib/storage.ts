@@ -131,6 +131,10 @@ function migrateAndValidate(raw: unknown): AppState {
 	};
 }
 
+export function normalizeImportedState(raw: unknown): AppState {
+	return migrateAndValidate(raw);
+}
+
 // The day ends at a configurable time (default 04:30 AM).
 // To get the "effective" date for tracking, we subtract the offset.
 export function getEffectiveDate(date: Date = new Date(), resetTime: string = '04:30'): string {
