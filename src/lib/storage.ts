@@ -1,4 +1,5 @@
 import { format, subHours, startOfDay } from 'date-fns';
+import { CURRENT_SCHEMA_VERSION, migrateToCurrentVersion } from './migrations';
 
 export interface LogEntry {
 	time: string;
@@ -26,8 +27,6 @@ export interface AppState {
 }
 
 const STORAGE_KEY = 'obsidian_creatine_data';
-const CURRENT_SCHEMA_VERSION = 1;
-
 function createDefaultState(): AppState {
 	return {
 		version: CURRENT_SCHEMA_VERSION,
@@ -117,11 +116,7 @@ function migrateAndValidate(raw: unknown): AppState {
 	const defaults = createDefaultState();
 	if (!isObject(raw)) return defaults;
 
-	const migrated: Record<string, unknown> = {
-		...raw,
-		// Legacy saved states had no explicit version.
-		version: isFiniteNumber(raw.version) ? Math.floor(raw.version) : CURRENT_SCHEMA_VERSION,
-	};
+	const migrated = migrateToCurrentVersion(raw);
 
 	return {
 		version: CURRENT_SCHEMA_VERSION,
