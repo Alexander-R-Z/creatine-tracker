@@ -68,6 +68,13 @@ export function hasMergeRollbackSnapshot(): boolean {
 	return readMergeRollbackSnapshot() !== null;
 }
 
+export function cleanupExpiredMergeRollbackSnapshot() {
+	// This is called proactively on app load to ensure expired snapshots are cleaned.
+	// readMergeRollbackSnapshot already removes expired entries, so we call it to trigger cleanup.
+	if (typeof localStorage === 'undefined') return;
+	readMergeRollbackSnapshot();
+}
+
 export function rollbackLastMergeImport(current: AppState): AppState {
 	const snapshot = readMergeRollbackSnapshot();
 	if (!snapshot) return current;

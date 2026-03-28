@@ -192,6 +192,15 @@ export function undoLastEntry(state: AppState): AppState {
 		entries: newEntries,
 	};
 
+	// If the log is now empty (total=0, no entries), remove the day entirely
+	if (newLog.total === 0 && newLog.entries.length === 0) {
+		const { [dateStr]: _, ...remainingLogs } = state.logs;
+		return {
+			...state,
+			logs: remainingLogs,
+		};
+	}
+
 	return {
 		...state,
 		logs: {
@@ -209,11 +218,58 @@ export function updateDayLog(state: AppState, dateStr: string, newTotal: number)
 		total: Math.max(0, newTotal),
 	};
 
+	// If the log is now empty (total=0, no entries), remove the day entirely
+	if (newLog.total === 0 && newLog.entries.length === 0) {
+		const { [dateStr]: _, ...remainingLogs } = state.logs;
+		return {
+			...state,
+			logs: remainingLogs,
+		};
+	}
+
 	return {
 		...state,
 		logs: {
 			...state.logs,
 			[dateStr]: newLog,
 		},
+	};
+}
+
+/**
+ * Prunes logs to remove old per-entry details (>24 months) while preserving totals for history,
+ * and removes entirely empty days (total=0, no entries).
+ */
+export function pruneLogs(state: AppState): AppState {
+	const now = new Date();
+	const twentyFourMonthsAgo = new Date(now.getTime() - 24 * 30.44 * 24 * 60 * 60 * 1000);
+	const cutoffDateStr = format(twentyFourMonthsAgo, 'yyyy-MM-dd');
+
+	const prunedLogs: Record<string, DayLog> = {};
+
+	for (const [dateKey, dayLog] of Object.entries(state.logs)) {
+		// Skip dates that don't match the expected format
+		if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) continue;
+
+		// Remove entirely empty days (total=0 and no entries)
+		if (dayLog.total === 0 && dayLog.entries.length === 0) {
+			continue;
+		}
+
+		// For old dates (>24 months), keep only the total, discard entries
+		if (dateKey < cutoffDateStr) {
+			prunedLogs[dateKey] = {
+				total: dayLog.total,
+				entries: [],
+			};
+		} else {
+			// Keep recent dates as-is
+			prunedLogs[dateKey] = dayLog;
+		}
+	}
+
+	return {
+		...state,
+		logs: prunedLogs,
 	};
 }
