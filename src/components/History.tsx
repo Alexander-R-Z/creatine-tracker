@@ -286,7 +286,6 @@ export default function History({ state, updateState }: HistoryProps) {
 
 				<div className='space-y-6 relative z-10'>
 					{visibleArchiveMonths.map(({ monthName, year, monthKey, days, completedDays }) => {
-
 						return (
 							<div
 								key={monthKey}
@@ -346,7 +345,9 @@ export default function History({ state, updateState }: HistoryProps) {
 						);
 					})}
 
-					{hasMoreArchiveMonths && <div ref={loadMoreSentinelRef} className='h-1 w-full' aria-hidden='true' />}
+					{hasMoreArchiveMonths && (
+						<div ref={loadMoreSentinelRef} className='h-1 w-full' aria-hidden='true' />
+					)}
 				</div>
 			</section>
 		</div>
