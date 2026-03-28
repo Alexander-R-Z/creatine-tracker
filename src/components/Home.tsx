@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry } from '../lib/storage';
 import { cn } from '../lib/utils';
-import { format, differenceInHours, subDays } from 'date-fns';
+import { format, differenceInHours, parseISO, subDays } from 'date-fns';
 import { View } from '../App';
 
 interface HomeProps {
@@ -117,18 +117,24 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		updateState((prev) => undoLastEntry(prev));
 	};
 
-	// Weekly Data for the chart
+	// Weekly Data for the chart: anchor to effective dates so it stays correct around reset time.
 	const weeklyData = Array.from({ length: 7 }).map((_, i) => {
-		const d = subDays(new Date(), 6 - i);
-		const dStr = getEffectiveDate(d, state.settings.resetTime);
-		const dLog = getLogForDate(state, dStr);
+		const effectiveDate = getEffectiveDate(subDays(new Date(), 6 - i), state.settings.resetTime);
+		const dLog = getLogForDate(state, effectiveDate);
 		return {
-			day: format(d, 'EEE'),
+			day: format(parseISO(effectiveDate), 'EEE'),
 			total: dLog.total,
-			goal: state.settings.dailyGoal,
-			isToday: i === 6,
+			isToday: effectiveDate === dateStr,
 		};
 	});
+
+	const weeklyChartMax = useMemo(() => {
+		const maxTotal = weeklyData.reduce((max, day) => Math.max(max, day.total), 0);
+		if (maxTotal <= 10) return 10;
+		return Math.min(25, Math.ceil(maxTotal / 5) * 5);
+	}, [weeklyData]);
+
+	const weeklyAxisTicks = [weeklyChartMax, Math.round(weeklyChartMax / 2), 0];
 
 	return (
 		<div className='flex flex-col items-center w-full space-y-6 pb-24'>
@@ -167,11 +173,11 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						{/* Progress Beam */}
 						<div className='w-full h-1.5 bg-[#1a1a1a] rounded-full mb-4 overflow-hidden'>
 							<motion.div
-								initial={{ width: 0 }}
+								initial={false}
 								animate={{ width: `${progress * 100}%` }}
-								transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+								transition={{ duration: 0.28, ease: 'easeOut' }}
 								className={cn(
-									'h-full transition-all duration-700',
+									'h-full',
 									isGoalReached
 										? 'bg-secondary shadow-[0_0_25px_rgba(74,59,48,0.5)]'
 										: 'bg-[#7f98ff]',
@@ -206,128 +212,161 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 			{/* Control Panel */}
 			<div className='w-full grid grid-cols-1 gap-4'>
-				<div className='bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col items-center gap-6'>
-					<div className='flex items-center justify-between w-full px-4'>
-						<button
-							aria-label='Decrease next dose amount'
-							title='Decrease next dose amount'
-							onClick={() => setPortionModifier((prev) => prev - 1)}
-							className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-all hover:text-white border border-white/5'
-						>
-							<Minus className='w-5 h-5' />
-						</button>
+				<div className='bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
+					<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#7f98ff]/10 blur-[100px] rounded-full pointer-events-none' />
+					<div className='relative z-10 flex flex-col items-center gap-6 w-full'>
+						<div className='flex items-center justify-between w-full px-4'>
+							<button
+								aria-label='Decrease next dose amount'
+								title='Decrease next dose amount'
+								onClick={() => setPortionModifier((prev) => prev - 1)}
+								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-all hover:text-white border border-white/5'
+							>
+								<Minus className='w-5 h-5' />
+							</button>
 
-						<div className='flex flex-col items-center'>
-							<div className='flex items-baseline relative'>
-								<span className='text-4xl font-headline font-black text-white'>{effectivePortion}</span>
-								<span className='text-sm font-bold text-[#444444] ml-1'>g</span>
-								{isSmartCapped && (
-									<div className='absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap'>
-										<span className='text-[8px] font-black text-[#00fdc1] uppercase tracking-widest bg-[#00fdc1]/10 px-1.5 py-0.5 rounded-full border border-[#00fdc1]/20'>
-											Smart Cap
-										</span>
-									</div>
-								)}
+							<div className='flex flex-col items-center'>
+								<div className='flex items-baseline relative'>
+									<span className='text-4xl font-headline font-black text-white'>
+										{effectivePortion}
+									</span>
+									<span className='text-sm font-bold text-[#444444] ml-1'>g</span>
+									{isSmartCapped && (
+										<div className='absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap'>
+											<span className='text-[8px] font-black text-[#00fdc1] uppercase tracking-widest bg-[#00fdc1]/10 px-1.5 py-0.5 rounded-full border border-[#00fdc1]/20'>
+												Smart Cap
+											</span>
+										</div>
+									)}
+								</div>
+								<span className='text-[9px] font-bold text-[#00fdc1] tracking-[0.3em] uppercase mt-1'>
+									Next Dose
+								</span>
 							</div>
-							<span className='text-[9px] font-bold text-[#00fdc1] tracking-[0.3em] uppercase mt-1'>
-								Next Dose
-							</span>
+
+							<button
+								aria-label='Increase next dose amount'
+								title='Increase next dose amount'
+								onClick={() => setPortionModifier((prev) => prev + 1)}
+								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-all hover:text-white border border-white/5'
+							>
+								<Plus className='w-5 h-5' />
+							</button>
 						</div>
 
 						<button
-							aria-label='Increase next dose amount'
-							title='Increase next dose amount'
-							onClick={() => setPortionModifier((prev) => prev + 1)}
-							className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-all hover:text-white border border-white/5'
+							onClick={handleAdd}
+							disabled={effectivePortion <= 0}
+							className={cn(
+								'w-full py-5 rounded-2xl font-headline font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.97] shadow-xl',
+								effectivePortion <= 0
+									? 'bg-[#1a1a1a] text-[#444444] cursor-not-allowed'
+									: isGoalReached
+										? 'bg-secondary text-white hover:opacity-90'
+										: 'bg-white text-black hover:bg-[#f0f0f0]',
+							)}
 						>
-							<Plus className='w-5 h-5' />
+							{isGoalReached ? 'Add Creative' : 'Add Creatine'}
 						</button>
-					</div>
 
-					<button
-						onClick={handleAdd}
-						disabled={effectivePortion <= 0}
-						className={cn(
-							'w-full py-5 rounded-2xl font-headline font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.97] shadow-xl',
-							effectivePortion <= 0
-								? 'bg-[#1a1a1a] text-[#444444] cursor-not-allowed'
-								: isGoalReached
-									? 'bg-secondary text-white hover:opacity-90'
-									: 'bg-white text-black hover:bg-[#f0f0f0]',
-						)}
-					>
-						{isGoalReached ? 'Add Creative' : 'Add Creatine'}
-					</button>
-
-					<div className='flex items-center gap-8'>
-						<button
-							onClick={handleUndo}
-							className='flex items-center gap-2 text-[#444444] hover:text-[#ff716c] transition-colors'
-						>
-							<Undo2 className='w-4 h-4' />
-							<span className='text-[10px] font-bold tracking-widest uppercase'>Rollback</span>
-						</button>
-						<div className='w-px h-3 bg-white/5' />
-						<button
-							onClick={() => updateState((prev) => addEntry(prev, state.settings.portionSize))}
-							className='flex items-center gap-2 text-[#444444] hover:text-white transition-colors'
-						>
-							<HistoryIcon className='w-4 h-4' />
-							<span className='text-[10px] font-bold tracking-widest uppercase'>Quick Add</span>
-						</button>
+						<div className='flex items-center gap-8'>
+							<button
+								onClick={handleUndo}
+								className='flex items-center gap-2 text-[#444444] hover:text-[#ff716c] transition-colors'
+							>
+								<Undo2 className='w-4 h-4' />
+								<span className='text-[10px] font-bold tracking-widest uppercase'>Rollback</span>
+							</button>
+							<div className='w-px h-3 bg-white/5' />
+							<button
+								onClick={() => updateState((prev) => addEntry(prev, state.settings.portionSize))}
+								className='flex items-center gap-2 text-[#444444] hover:text-white transition-colors'
+							>
+								<HistoryIcon className='w-4 h-4' />
+								<span className='text-[10px] font-bold tracking-widest uppercase'>Quick Add</span>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Activity Chart */}
-			<section className='w-full bg-[#111111] rounded-[2rem] p-6 border border-white/5'>
-				<button
-					onClick={() => setView('history')}
-					className='flex items-center justify-between w-full mb-6 group'
-				>
-					<div className='flex items-center gap-2'>
-						<Activity className='w-4 h-4 text-[#7f98ff]' />
-						<span className='text-[10px] font-bold text-[#666666] uppercase tracking-widest group-hover:text-white transition-colors'>
-							Last 7 Days
-						</span>
-					</div>
-					<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
-				</button>
-				<div className='flex items-end justify-between h-28 px-2 gap-2'>
-					{weeklyData.map((d, i) => {
-						const barHeight = Math.max(8, (d.total / d.goal) * 100);
-						return (
-							<div key={i} className='flex flex-col items-center gap-3 flex-1'>
-								<div className='w-full h-full flex items-end bg-[#1a1a1a]/50 rounded-full overflow-hidden'>
-									<motion.div
-										initial={{ height: 0 }}
-										animate={{ height: `${Math.min(100, barHeight)}%` }}
-										className={cn(
-											'w-full rounded-full transition-all',
-											d.isToday
-												? 'bg-[#00fdc1]'
-												: d.total >= d.goal
-													? 'bg-[#00fdc1]/30'
-													: 'bg-[#262626]',
-										)}
-									/>
-								</div>
-								<span
-									className={cn(
-										'text-[9px] font-bold uppercase tracking-tighter',
-										d.isToday ? 'text-[#00fdc1]' : 'text-[#444444]',
-									)}
-								>
-									{d.day}
-								</span>
+			<section className='w-full bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
+				<div className='absolute -right-16 -top-16 w-52 h-52 bg-[#00fdc1]/8 blur-[90px] rounded-full pointer-events-none' />
+				<div className='relative z-10'>
+					<button
+						onClick={() => setView('history')}
+						className='flex items-center justify-between w-full mb-6 group'
+					>
+						<div className='flex items-center gap-2'>
+							<Activity className='w-4 h-4 text-[#7f98ff]' />
+							<span className='text-[10px] font-bold text-[#666666] uppercase tracking-widest group-hover:text-white transition-colors'>
+								Last 7 Days
+							</span>
+						</div>
+						<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
+					</button>
+					<div className='relative px-2'>
+						<div className='relative h-28 w-full max-w-[420px] mx-auto'>
+							<div className='absolute -left-6 top-0 h-[calc(100%-2rem)] flex flex-col justify-between items-end'>
+								{weeklyAxisTicks.map((tick) => (
+									<span key={tick} className='text-[8px] font-bold text-[#4a4a4a] leading-none'>
+										{tick}g
+									</span>
+								))}
 							</div>
-						);
-					})}
+							<div className='relative h-full flex items-end justify-between gap-2'>
+								{weeklyData.map((d, i) => {
+									const relativeHeight = (d.total / weeklyChartMax) * 100;
+									const barHeight = d.total > 0 ? Math.max(12, relativeHeight) : 2;
+									return (
+										<div key={i} className='h-full flex flex-col items-center justify-end flex-1'>
+											<div className='w-full h-[calc(100%-2.25rem)] flex items-end'>
+												<motion.div
+													initial={false}
+													animate={{ height: `${Math.min(100, barHeight)}%` }}
+													transition={{ duration: 0.35, ease: 'easeOut' }}
+													className={cn(
+														'w-full rounded-md transition-all duration-500 flex items-start justify-center pt-1',
+														d.isToday
+															? 'bg-[#00fdc1] shadow-[0_0_8px_rgba(0,253,193,0.35)]'
+															: d.total > 0
+																? 'bg-[#8a837c]'
+																: 'bg-[#6a6560]/40',
+													)}
+												>
+													{d.total > 0 && (
+														<span
+															className={cn(
+																'text-[8px] font-bold leading-none',
+																d.isToday ? 'text-[#063f32]' : 'text-[#f0ece8]',
+															)}
+														>
+															{d.total}
+														</span>
+													)}
+												</motion.div>
+											</div>
+											<span
+												className={cn(
+													'text-[10px] font-semibold tracking-tight mt-2',
+													d.isToday ? 'text-white' : 'text-[#55514c]',
+												)}
+											>
+												{d.day}
+											</span>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					</div>
 				</div>
 			</section>
 
 			{/* Stats Bento Grid */}
-			<div className='grid grid-cols-2 gap-4 w-full'>
+			<div className='grid grid-cols-2 gap-4 w-full relative'>
+				<div className='absolute -left-12 top-24 w-48 h-48 bg-[#7f98ff]/7 blur-[90px] rounded-full pointer-events-none' />
 				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
 					<div className='flex items-center gap-2 mb-3'>
 						<Flame className='w-3.5 h-3.5 text-[#ff716c]' />
