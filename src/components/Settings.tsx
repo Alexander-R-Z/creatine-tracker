@@ -84,7 +84,28 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 		}));
 	};
 
+	const updateEntryRetentionMonths = (val: number) => {
+		updateState((prev) => ({
+			...prev,
+			settings: { ...prev.settings, entryRetentionMonths: Math.max(3, Math.min(60, val)) },
+		}));
+	};
+
+	// Format months as "Xy Zm" (e.g., "2y", "1y 3m", "6m")
+	const formatRetentionMonths = (months: number): string => {
+		const years = Math.floor(months / 12);
+		const remainingMonths = months % 12;
+		if (years > 0 && remainingMonths > 0) {
+			return `${years}y ${remainingMonths}m`;
+		} else if (years > 0) {
+			return `${years}y`;
+		} else {
+			return `${months}m`;
+		}
+	};
+
 	const resetTimeDisplay = state.settings.resetTime || '04:30';
+	const entryRetentionMonths = state.settings.entryRetentionMonths ?? 24;
 
 	const triggerImportFile = () => {
 		fileInputRef.current?.click();
@@ -312,6 +333,36 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 						<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
 							Your tracking day closes at {resetTimeDisplay}. Logs before that time count toward the
 							previous day; logs after it count toward the current day.
+						</p>
+					</div>
+
+					<div className='p-5 bg-[#131313] rounded-2xl border border-white/5 space-y-4'>
+						<div className='flex justify-between items-center'>
+							<div className='flex flex-col'>
+								<span className='text-sm font-bold text-white'>Entry History Retention</span>
+								<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+									Current: {formatRetentionMonths(entryRetentionMonths)}
+								</span>
+							</div>
+							<span className='text-xl font-headline font-black text-[#00fdc1]'>
+								{formatRetentionMonths(entryRetentionMonths)}
+							</span>
+						</div>
+						<input
+							id='settings-entry-retention'
+							type='range'
+							min='3'
+							max='60'
+							step='1'
+							value={entryRetentionMonths}
+							onChange={(e) => updateEntryRetentionMonths(parseInt(e.target.value, 10))}
+							aria-label='Entry history retention in months'
+							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
+						/>
+						<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
+							Old entries (per-entry timestamps) are automatically removed after{' '}
+							{formatRetentionMonths(entryRetentionMonths)}, but daily totals are preserved for history
+							and streak calculations.
 						</p>
 					</div>
 

@@ -17,6 +17,7 @@ export interface Settings {
 	weight?: number;
 	goal?: 'gym' | 'gym_more';
 	resetTime?: string; // HH:mm format
+	entryRetentionMonths?: number; // How many months to keep per-entry details (3-60, default 24)
 }
 
 export interface AppState {
@@ -34,6 +35,7 @@ function createDefaultState(): AppState {
 			dailyGoal: 5,
 			portionSize: 5,
 			resetTime: '04:30',
+			entryRetentionMonths: 24,
 		},
 		logs: {},
 		onboarded: false,
@@ -70,11 +72,15 @@ function sanitizeSettings(value: unknown): Settings {
 
 	const goal = value.goal === 'gym' || value.goal === 'gym_more' ? value.goal : undefined;
 	const weight = isFiniteNumber(value.weight) ? Math.max(20, Math.min(250, Math.round(value.weight))) : undefined;
+	const entryRetentionMonths = isFiniteNumber(value.entryRetentionMonths)
+		? Math.max(3, Math.min(60, Math.round(value.entryRetentionMonths)))
+		: defaults.entryRetentionMonths;
 
 	return {
 		dailyGoal,
 		portionSize,
 		resetTime: sanitizeResetTime(value.resetTime),
+		entryRetentionMonths,
 		...(goal ? { goal } : {}),
 		...(weight ? { weight } : {}),
 	};
@@ -237,13 +243,15 @@ export function updateDayLog(state: AppState, dateStr: string, newTotal: number)
 }
 
 /**
- * Prunes logs to remove old per-entry details (>24 months) while preserving totals for history,
+ * Prunes logs to remove old per-entry details (older than configured retention period) while preserving totals for history,
  * and removes entirely empty days (total=0, no entries).
  */
 export function pruneLogs(state: AppState): AppState {
+	const retentionMonths = state.settings.entryRetentionMonths ?? 24;
 	const now = new Date();
-	const twentyFourMonthsAgo = new Date(now.getTime() - 24 * 30.44 * 24 * 60 * 60 * 1000);
-	const cutoffDateStr = format(twentyFourMonthsAgo, 'yyyy-MM-dd');
+	const cutoffMs = retentionMonths * 30.44 * 24 * 60 * 60 * 1000;
+	const retentionCutoffDate = new Date(now.getTime() - cutoffMs);
+	const cutoffDateStr = format(retentionCutoffDate, 'yyyy-MM-dd');
 
 	const prunedLogs: Record<string, DayLog> = {};
 
