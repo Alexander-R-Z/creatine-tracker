@@ -143,9 +143,9 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	const weeklyAxisTicks = [weeklyChartMax, Math.round(weeklyChartMax / 2), 0];
 
 	return (
-		<div className='flex flex-col items-center w-full space-y-6 pb-24'>
+		<div className='grid w-full gap-6 pb-24 pt-4 xl:grid-cols-12 xl:items-start'>
 			{/* Hero Progress - Bento Style */}
-			<section className='w-full mt-4'>
+			<section className='w-full xl:col-span-8'>
 				<div className='w-full bg-[#111111] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden'>
 					<div className='absolute -right-20 -top-20 w-64 h-64 bg-[#00fdc1]/5 blur-[100px] rounded-full pointer-events-none' />
 					<div className='absolute -left-14 -bottom-16 w-52 h-52 bg-[#4a3b30]/16 blur-[95px] rounded-full pointer-events-none' />
@@ -216,7 +216,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			</section>
 
 			{/* Control Panel */}
-			<div className='w-full grid grid-cols-1 gap-4'>
+			<div className='w-full grid grid-cols-1 gap-4 xl:col-span-8'>
 				<div className='bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
 					<div className='absolute -right-16 -top-20 w-56 h-56 bg-[#00fdc1]/7 blur-[100px] rounded-full pointer-events-none' />
 					<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#4a3b30]/16 blur-[100px] rounded-full pointer-events-none' />
@@ -341,7 +341,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			</div>
 
 			{/* Activity Chart */}
-			<section className='w-full bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden'>
+			<section className='w-full bg-[#111111] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden xl:col-span-8'>
 				<div className='absolute -right-16 -top-16 w-52 h-52 bg-[#00fdc1]/8 blur-[90px] rounded-full pointer-events-none' />
 				<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#4a3b30]/16 blur-[100px] rounded-full pointer-events-none' />
 				<div className='relative z-10'>
@@ -358,7 +358,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
 					</button>
 					<div className='relative px-2'>
-						<div className='relative h-28 w-full max-w-[420px] mx-auto'>
+						<div className='relative h-28 w-full max-w-[420px] md:max-w-[720px] lg:max-w-full mx-auto'>
 							<div className='absolute -left-6 top-0 h-[calc(100%-2rem)] flex flex-col justify-between items-end'>
 								{weeklyAxisTicks.map((tick) => (
 									<span key={tick} className='text-[8px] font-bold text-[#4a4a4a] leading-none'>
@@ -416,9 +416,23 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			</section>
 
 			{/* Stats Bento Grid */}
-			<div className='grid grid-cols-2 gap-4 w-full relative'>
+			<div className='grid grid-cols-2 xl:grid-cols-1 gap-4 w-full relative xl:col-span-4 xl:col-start-9 xl:row-start-1 xl:row-span-3 xl:sticky xl:top-24'>
 				<div className='absolute -right-12 -top-10 w-48 h-48 bg-[#00fdc1]/7 blur-[90px] rounded-full pointer-events-none' />
 				<div className='absolute -left-12 -bottom-10 w-48 h-48 bg-[#4a3b30]/20 blur-[90px] rounded-full pointer-events-none' />
+				<div className='col-span-2 xl:col-span-1 bg-[#111111] rounded-[1.5rem] p-5 border border-white/5 relative overflow-hidden'>
+					<div className='absolute -right-10 -top-10 w-32 h-32 bg-[#00fdc1]/8 blur-[75px] rounded-full pointer-events-none' />
+					<div className='text-[9px] font-bold uppercase tracking-widest text-[#666666] mb-3'>Quick Status</div>
+					<div className='grid grid-cols-2 gap-3'>
+						<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+							<div className='text-[8px] font-bold uppercase tracking-widest text-[#666666]'>Last Log</div>
+							<div className='text-sm font-bold text-white mt-1'>{lastLoggedTime}</div>
+						</div>
+						<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+							<div className='text-[8px] font-bold uppercase tracking-widest text-[#666666]'>Elapsed</div>
+							<div className='text-sm font-bold text-white mt-1'>{timeAgo}</div>
+						</div>
+					</div>
+				</div>
 				<div className='bg-[#111111] rounded-[1.5rem] p-5 flex flex-col border border-white/5'>
 					<div className='flex items-center gap-2 mb-3'>
 						<Flame className='w-3.5 h-3.5 text-[#ff716c]' />
@@ -459,7 +473,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 						Total days logged
 					</span>
 				</div>
-				<div className='col-span-2 bg-[#111111] rounded-[1.5rem] p-5 flex items-center justify-between border border-[#4a3b30]/35'>
+				<div className='col-span-2 xl:col-span-1 bg-[#111111] rounded-[1.5rem] p-5 flex items-center justify-between border border-[#4a3b30]/35'>
 					<div className='flex flex-col'>
 						<div className='flex items-center gap-2 mb-1'>
 							<Zap className='text-[#00fdc1] w-3.5 h-3.5' />

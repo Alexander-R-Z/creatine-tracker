@@ -175,14 +175,16 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 	};
 
 	return (
-		<div className='space-y-8'>
+		<div className='space-y-8 pb-20'>
 			<section>
 				<h2 className='font-headline text-3xl font-extrabold tracking-tight mb-1'>Settings</h2>
 				<p className='text-[#b8a697] text-sm'>Fine-tune your parameters.</p>
 			</section>
 
+			<div className='grid gap-6 xl:grid-cols-2 xl:items-start'>
+
 			{/* Performance Goals Section */}
-			<section className='space-y-4'>
+			<section className='space-y-4 xl:col-start-1'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
@@ -281,12 +283,42 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			</section>
 
 			{/* Smart Calculator Section */}
-			<section className='space-y-4'>
+			<section className='space-y-4 xl:col-start-2 xl:row-start-1 xl:sticky xl:top-24'>
 				<div className='flex items-center gap-2 mb-2'>
 					<Calculator className='text-[#7f98ff] w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
 						Smart Calibration
 					</span>
+				</div>
+				<div className='bg-[#131313] p-5 rounded-[1.5rem] border border-white/10 relative overflow-hidden'>
+					<div className='absolute -right-6 -top-6 w-28 h-28 bg-[#7f98ff]/10 blur-3xl rounded-full pointer-events-none' />
+					<div className='relative z-10'>
+						<div className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#666666] mb-3'>
+							Live Snapshot
+						</div>
+						<div className='grid grid-cols-2 gap-3'>
+							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Daily Goal</div>
+								<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
+									{state.settings.dailyGoal}g
+								</div>
+							</div>
+							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Portion</div>
+								<div className='text-xl font-headline font-black text-[#7f98ff] mt-1'>
+									{state.settings.portionSize}g
+								</div>
+							</div>
+							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Reset</div>
+								<div className='text-xl font-headline font-black text-white mt-1'>{resetTimeDisplay}</div>
+							</div>
+							<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
+								<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>Suggested</div>
+								<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>{recommendedDose}g</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div className='bg-[#131313] p-6 rounded-[1.5rem] border border-[#4a3b30]/25 relative overflow-hidden'>
 					<div className='absolute -right-4 -top-4 w-24 h-24 bg-[#00fdc1]/5 blur-3xl rounded-full' />
@@ -308,7 +340,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			</section>
 
 			{/* System Section */}
-			<section className='space-y-4'>
+			<section className='space-y-4 xl:col-start-1'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-tertiary w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
@@ -404,7 +436,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			</section>
 
 			{/* Data Backup Section */}
-			<section className='space-y-4'>
+			<section className='space-y-4 xl:col-start-2'>
 				<div className='flex items-center gap-2 mb-2'>
 					<SettingsIcon className='text-[#7f98ff] w-4 h-4' />
 					<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
@@ -456,19 +488,19 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 					/>
 				</div>
 			</section>
+			</div>
 
 			{/* Calibration Modal */}
 			<AnimatePresence>
 				{isCalibrating && (
 					<div
-						className='fixed inset-0 z-[60] flex items-end justify-center px-4 bg-black/80 backdrop-blur-sm'
-						style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
+						className='fixed inset-0 z-[60] flex items-end md:items-center justify-center px-4 md:px-6 pb-10 md:pb-6 bg-black/80 backdrop-blur-sm'
 					>
 						<motion.div
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: 100, opacity: 0 }}
-							className='w-full max-w-md bg-[#111111] backdrop-blur-2xl rounded-2xl border border-white/5 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-120px)]'
+							className='w-full max-w-md md:max-w-xl bg-[#111111] backdrop-blur-2xl rounded-2xl md:rounded-[1.75rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-120px)] md:max-h-[85vh]'
 						>
 							{/* Header */}
 							<div className='bg-gradient-to-b from-[#1a1a1a] to-[#111111] px-5 py-4 border-b border-white/5 flex-shrink-0'>
@@ -630,12 +662,12 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			{/* Import Mode Modal */}
 			<AnimatePresence>
 				{isImportModeOpen && pendingImportState && (
-					<div className='fixed inset-0 z-[70] flex items-end justify-center px-4 pb-10 bg-black/80 backdrop-blur-sm'>
+					<div className='fixed inset-0 z-[70] flex items-end md:items-center justify-center px-4 md:px-6 pb-10 md:pb-6 bg-black/80 backdrop-blur-sm'>
 						<motion.div
 							initial={{ y: 100, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: 100, opacity: 0 }}
-							className='w-full max-w-md bg-[#262626]/90 backdrop-blur-2xl rounded-[1.5rem] p-6 border border-white/10 shadow-2xl space-y-5'
+							className='w-full max-w-md md:max-w-lg bg-[#262626]/90 backdrop-blur-2xl rounded-[1.5rem] p-6 border border-white/10 shadow-2xl space-y-5'
 						>
 							<div className='flex items-center justify-between'>
 								<h3 className='font-headline text-xl font-extrabold text-white'>Import Backup</h3>

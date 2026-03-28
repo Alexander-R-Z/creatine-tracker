@@ -12,9 +12,9 @@ interface LayoutProps {
 
 export default function Layout({ children, currentView, setView }: LayoutProps) {
 	return (
-		<div className='max-w-md mx-auto relative min-h-screen'>
+		<div className='relative min-h-screen w-full max-w-md md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto'>
 			<header className='fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#0e0e0e] to-transparent h-16'>
-				<div className='max-w-md mx-auto flex items-center justify-between px-6 h-full'>
+				<div className='w-full max-w-md md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex items-center justify-between px-6 md:px-8 h-full'>
 					<div className='flex items-center'>
 						{currentView !== 'home' && (
 							<button
@@ -44,21 +44,21 @@ export default function Layout({ children, currentView, setView }: LayoutProps) 
 				</div>
 			</header>
 
-			<main className='px-6 pt-16'>{children}</main>
+			<main className='px-6 md:px-8 pt-16'>{children}</main>
 
 			{/* Ambient Glows */}
 			<Glow
 				color='primary'
 				position='top-right'
-				size='w-[500px] h-[500px]'
-				blurSize='blur-[120px]'
+				size='w-[500px] h-[500px] md:w-[760px] md:h-[760px] lg:w-[900px] lg:h-[900px]'
+				blurSize='blur-[120px] md:blur-[190px] lg:blur-[220px]'
 				className='fixed -z-20 translate-x-1/2 -translate-y-1/2'
 			/>
 			<Glow
 				color='secondary'
 				position='bottom-left'
-				size='w-[400px] h-[400px]'
-				blurSize='blur-[100px]'
+				size='w-[400px] h-[400px] md:w-[640px] md:h-[640px] lg:w-[760px] lg:h-[760px]'
+				blurSize='blur-[100px] md:blur-[170px] lg:blur-[200px]'
 				className='fixed -z-20 -translate-x-1/2 translate-y-1/2'
 			/>
 		</div>

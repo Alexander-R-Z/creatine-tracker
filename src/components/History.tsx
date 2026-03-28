@@ -134,9 +134,10 @@ export default function History({ state, updateState }: HistoryProps) {
 	};
 
 	return (
-		<div className='space-y-10 pt-4 pb-20'>
+		<div className='pt-4 pb-20'>
+			<div className='grid gap-8 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.35fr)] xl:items-start'>
 			{/* Recent Activity */}
-			<section className='space-y-4 relative'>
+			<section className='space-y-4 relative xl:sticky xl:top-24'>
 				<div className='pointer-events-none absolute -right-10 -top-10 w-48 h-48 bg-[#00fdc1]/6 blur-[90px] rounded-full' />
 				<div className='pointer-events-none absolute -left-10 top-20 w-44 h-44 bg-[#4a3b30]/14 blur-[95px] rounded-full' />
 				<div className='flex items-center gap-2 mb-2'>
@@ -350,6 +351,7 @@ export default function History({ state, updateState }: HistoryProps) {
 					)}
 				</div>
 			</section>
+			</div>
 		</div>
 	);
 }

@@ -30,8 +30,8 @@ export default function Setup({ onComplete }: SetupProps) {
 	}, [recommendedDose]);
 
 	return (
-		<div className='min-h-screen flex flex-col items-start justify-start px-6 pt-12 pb-12 max-w-md mx-auto'>
-			<header className='fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-gradient-to-b from-[#0e0e0e] to-transparent'></header>
+		<div className='min-h-screen flex flex-col items-start justify-start px-6 md:px-8 pt-12 pb-12 w-full max-w-md md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto'>
+			<header className='fixed top-0 w-full z-50 flex items-center justify-between px-6 md:px-8 h-16 bg-gradient-to-b from-[#0e0e0e] to-transparent'></header>
 
 			<motion.div
 				initial={{ opacity: 0, y: 20 }}
