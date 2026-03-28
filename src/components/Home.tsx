@@ -4,10 +4,12 @@ import {
 	Plus,
 	Minus,
 	Undo2,
-	History as HistoryIcon,
 	Zap,
 	Target,
 	TrendingUp,
+	Pencil,
+	Check,
+	X,
 	Flame,
 	Trophy,
 	CheckCircle2,
@@ -15,7 +17,7 @@ import {
 	Activity,
 	ChevronRight,
 } from 'lucide-react';
-import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry } from '../lib/storage';
+import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry, updateDayLog } from '../lib/storage';
 import { cn } from '../lib/utils';
 import { format, differenceInHours, parseISO, subDays } from 'date-fns';
 import { View } from '../App';
@@ -30,6 +32,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
 	const log = getLogForDate(state, dateStr);
 	const [portionModifier, setPortionModifier] = useState(0);
+	const [isCorrectingToday, setIsCorrectingToday] = useState(false);
+	const [correctValue, setCorrectValue] = useState(0);
 
 	const progress = Math.min(1, log.total / state.settings.dailyGoal);
 	const isGoalReached = log.total >= state.settings.dailyGoal;
@@ -115,6 +119,16 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 	const handleUndo = () => {
 		updateState((prev) => undoLastEntry(prev));
+	};
+
+	const handleStartCorrectToday = () => {
+		setCorrectValue(log.total);
+		setIsCorrectingToday(true);
+	};
+
+	const handleApplyCorrectToday = () => {
+		updateState((prev) => updateDayLog(prev, dateStr, Math.max(0, correctValue)));
+		setIsCorrectingToday(false);
 	};
 
 	// Weekly Data for the chart: anchor to effective dates so it stays correct around reset time.
@@ -206,9 +220,6 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 								</span>
 							</div>
 						</div>
-						<p className='text-[9px] text-[#5e5e5e] mt-3 uppercase tracking-widest'>
-							Tracking day resets at {state.settings.resetTime || '04:30'}
-						</p>
 					</div>
 				</div>
 			</section>
@@ -282,13 +293,57 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							</button>
 							<div className='w-px h-3 bg-white/5' />
 							<button
-								onClick={() => updateState((prev) => addEntry(prev, state.settings.portionSize))}
-								className='flex items-center gap-2 text-[#444444] hover:text-white transition-colors'
+								onClick={handleStartCorrectToday}
+								className='flex items-center gap-2 text-[#444444] hover:text-[#00fdc1] transition-colors'
 							>
-								<HistoryIcon className='w-4 h-4' />
-								<span className='text-[10px] font-bold tracking-widest uppercase'>Quick Add</span>
+								<Pencil className='w-4 h-4' />
+								<span className='text-[10px] font-bold tracking-widest uppercase'>Correct Today</span>
 							</button>
 						</div>
+
+						{isCorrectingToday && (
+							<div className='w-full p-4 rounded-2xl bg-[#0f0f0f] border border-white/10 flex items-center justify-between gap-3'>
+								<div className='flex items-center gap-2'>
+									<button
+										onClick={() => setCorrectValue((prev) => Math.max(0, prev - 1))}
+										aria-label='Decrease today total'
+										title='Decrease today total'
+										className='w-8 h-8 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center'
+									>
+										<Minus className='w-4 h-4' />
+									</button>
+									<span className='text-lg font-headline font-bold text-white w-14 text-center'>
+										{correctValue}g
+									</span>
+									<button
+										onClick={() => setCorrectValue((prev) => prev + 1)}
+										aria-label='Increase today total'
+										title='Increase today total'
+										className='w-8 h-8 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center'
+									>
+										<Plus className='w-4 h-4' />
+									</button>
+								</div>
+								<div className='flex items-center gap-2'>
+									<button
+										onClick={() => setIsCorrectingToday(false)}
+										aria-label='Cancel correction'
+										title='Cancel correction'
+										className='w-8 h-8 rounded-full bg-[#1a1a1a] border border-white/10 text-[#ababab] flex items-center justify-center'
+									>
+										<X className='w-4 h-4' />
+									</button>
+									<button
+										onClick={handleApplyCorrectToday}
+										aria-label='Apply today correction'
+										title='Apply today correction'
+										className='w-8 h-8 rounded-full bg-[#00fdc1] text-[#004734] flex items-center justify-center'
+									>
+										<Check className='w-4 h-4' />
+									</button>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

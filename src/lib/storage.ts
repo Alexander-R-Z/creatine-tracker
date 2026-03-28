@@ -1,125 +1,220 @@
-import { format, subHours, startOfDay } from "date-fns";
+import { format, subHours, startOfDay } from 'date-fns';
 
 export interface LogEntry {
-  time: string;
-  amount: number;
+	time: string;
+	amount: number;
 }
 
 export interface DayLog {
-  total: number;
-  entries: LogEntry[];
+	total: number;
+	entries: LogEntry[];
 }
 
 export interface Settings {
-  dailyGoal: number;
-  portionSize: number;
-  weight?: number;
-  goal?: 'gym' | 'gym_more';
-  resetTime?: string; // HH:mm format
+	dailyGoal: number;
+	portionSize: number;
+	weight?: number;
+	goal?: 'gym' | 'gym_more';
+	resetTime?: string; // HH:mm format
 }
 
 export interface AppState {
-  settings: Settings;
-  logs: Record<string, DayLog>;
-  onboarded: boolean;
+	version: number;
+	settings: Settings;
+	logs: Record<string, DayLog>;
+	onboarded: boolean;
 }
 
-const STORAGE_KEY = "obsidian_creatine_data";
+const STORAGE_KEY = 'obsidian_creatine_data';
+const CURRENT_SCHEMA_VERSION = 1;
+
+function createDefaultState(): AppState {
+	return {
+		version: CURRENT_SCHEMA_VERSION,
+		settings: {
+			dailyGoal: 5,
+			portionSize: 5,
+			resetTime: '04:30',
+		},
+		logs: {},
+		onboarded: false,
+	};
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+	return typeof value === 'number' && Number.isFinite(value);
+}
+
+function sanitizeResetTime(value: unknown): string {
+	if (typeof value !== 'string') return '04:30';
+	const match = value.match(/^(\d{2}):(\d{2})$/);
+	if (!match) return '04:30';
+	const hours = Number(match[1]);
+	const minutes = Number(match[2]);
+	if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return '04:30';
+	return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+function sanitizeSettings(value: unknown): Settings {
+	const defaults = createDefaultState().settings;
+	if (!isObject(value)) return defaults;
+
+	const dailyGoal = isFiniteNumber(value.dailyGoal) ? Math.max(1, Math.round(value.dailyGoal)) : defaults.dailyGoal;
+	const rawPortion = isFiniteNumber(value.portionSize)
+		? Math.max(1, Math.round(value.portionSize))
+		: defaults.portionSize;
+	const portionSize = Math.min(rawPortion, dailyGoal);
+
+	const goal = value.goal === 'gym' || value.goal === 'gym_more' ? value.goal : undefined;
+	const weight = isFiniteNumber(value.weight) ? Math.max(20, Math.min(250, Math.round(value.weight))) : undefined;
+
+	return {
+		dailyGoal,
+		portionSize,
+		resetTime: sanitizeResetTime(value.resetTime),
+		...(goal ? { goal } : {}),
+		...(weight ? { weight } : {}),
+	};
+}
+
+function sanitizeEntries(value: unknown): LogEntry[] {
+	if (!Array.isArray(value)) return [];
+	return value
+		.filter((entry): entry is Record<string, unknown> => isObject(entry))
+		.map((entry) => ({
+			time: typeof entry.time === 'string' ? entry.time : new Date(0).toISOString(),
+			amount: isFiniteNumber(entry.amount) ? Math.max(0, entry.amount) : 0,
+		}))
+		.filter((entry) => entry.amount > 0);
+}
+
+function sanitizeLogs(value: unknown): Record<string, DayLog> {
+	if (!isObject(value)) return {};
+	const logs: Record<string, DayLog> = {};
+
+	for (const [dateKey, dayLog] of Object.entries(value)) {
+		if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isObject(dayLog)) continue;
+
+		const entries = sanitizeEntries(dayLog.entries);
+		const total = isFiniteNumber(dayLog.total)
+			? Math.max(0, dayLog.total)
+			: entries.reduce((sum, entry) => sum + entry.amount, 0);
+
+		logs[dateKey] = {
+			total,
+			entries,
+		};
+	}
+
+	return logs;
+}
+
+function migrateAndValidate(raw: unknown): AppState {
+	const defaults = createDefaultState();
+	if (!isObject(raw)) return defaults;
+
+	const migrated: Record<string, unknown> = {
+		...raw,
+		// Legacy saved states had no explicit version.
+		version: isFiniteNumber(raw.version) ? Math.floor(raw.version) : CURRENT_SCHEMA_VERSION,
+	};
+
+	return {
+		version: CURRENT_SCHEMA_VERSION,
+		settings: sanitizeSettings(migrated.settings),
+		logs: sanitizeLogs(migrated.logs),
+		onboarded: typeof migrated.onboarded === 'boolean' ? migrated.onboarded : defaults.onboarded,
+	};
+}
 
 // The day ends at a configurable time (default 04:30 AM).
 // To get the "effective" date for tracking, we subtract the offset.
-export function getEffectiveDate(date: Date = new Date(), resetTime: string = "04:30"): string {
-  const [hours, minutes] = resetTime.split(':').map(Number);
-  const offsetHours = hours + (minutes / 60);
-  const effective = subHours(date, offsetHours);
-  return format(startOfDay(effective), "yyyy-MM-dd");
+export function getEffectiveDate(date: Date = new Date(), resetTime: string = '04:30'): string {
+	const [hours, minutes] = resetTime.split(':').map(Number);
+	const offsetHours = hours + minutes / 60;
+	const effective = subHours(date, offsetHours);
+	return format(startOfDay(effective), 'yyyy-MM-dd');
 }
 
 export function loadState(): AppState {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to parse saved state", e);
-    }
-  }
-  return {
-    settings: {
-      dailyGoal: 5,
-      portionSize: 5,
-      resetTime: "04:30",
-    },
-    logs: {},
-    onboarded: false,
-  };
+	const saved = localStorage.getItem(STORAGE_KEY);
+	if (saved) {
+		try {
+			const parsed = JSON.parse(saved) as unknown;
+			return migrateAndValidate(parsed);
+		} catch (e) {
+			console.error('Failed to parse saved state', e);
+		}
+	}
+	return createDefaultState();
 }
 
 export function saveState(state: AppState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, version: CURRENT_SCHEMA_VERSION }));
 }
 
 export function getLogForDate(state: AppState, dateStr: string): DayLog {
-  return state.logs[dateStr] || { total: 0, entries: [] };
+	return state.logs[dateStr] || { total: 0, entries: [] };
 }
 
 export function addEntry(state: AppState, amount: number): AppState {
-  const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
-  const currentLog = getLogForDate(state, dateStr);
-  
-  const newLog: DayLog = {
-    total: currentLog.total + amount,
-    entries: [
-      ...currentLog.entries,
-      { time: new Date().toISOString(), amount }
-    ]
-  };
+	const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
+	const currentLog = getLogForDate(state, dateStr);
 
-  return {
-    ...state,
-    logs: {
-      ...state.logs,
-      [dateStr]: newLog
-    }
-  };
+	const newLog: DayLog = {
+		total: currentLog.total + amount,
+		entries: [...currentLog.entries, { time: new Date().toISOString(), amount }],
+	};
+
+	return {
+		...state,
+		logs: {
+			...state.logs,
+			[dateStr]: newLog,
+		},
+	};
 }
 
 export function undoLastEntry(state: AppState): AppState {
-  const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
-  const currentLog = getLogForDate(state, dateStr);
-  
-  if (currentLog.entries.length === 0) return state;
+	const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
+	const currentLog = getLogForDate(state, dateStr);
 
-  const lastEntry = currentLog.entries[currentLog.entries.length - 1];
-  const newEntries = currentLog.entries.slice(0, -1);
-  
-  const newLog: DayLog = {
-    total: Math.max(0, currentLog.total - lastEntry.amount),
-    entries: newEntries
-  };
+	if (currentLog.entries.length === 0) return state;
 
-  return {
-    ...state,
-    logs: {
-      ...state.logs,
-      [dateStr]: newLog
-    }
-  };
+	const lastEntry = currentLog.entries[currentLog.entries.length - 1];
+	const newEntries = currentLog.entries.slice(0, -1);
+
+	const newLog: DayLog = {
+		total: Math.max(0, currentLog.total - lastEntry.amount),
+		entries: newEntries,
+	};
+
+	return {
+		...state,
+		logs: {
+			...state.logs,
+			[dateStr]: newLog,
+		},
+	};
 }
 
 export function updateDayLog(state: AppState, dateStr: string, newTotal: number): AppState {
-  const currentLog = getLogForDate(state, dateStr);
-  
-  const newLog: DayLog = {
-    ...currentLog,
-    total: Math.max(0, newTotal),
-  };
+	const currentLog = getLogForDate(state, dateStr);
 
-  return {
-    ...state,
-    logs: {
-      ...state.logs,
-      [dateStr]: newLog
-    }
-  };
+	const newLog: DayLog = {
+		...currentLog,
+		total: Math.max(0, newTotal),
+	};
+
+	return {
+		...state,
+		logs: {
+			...state.logs,
+			[dateStr]: newLog,
+		},
+	};
 }
