@@ -16,5 +16,16 @@ export default defineConfig(() => {
 			// Keep this switch to disable HMR in constrained environments.
 			hmr: process.env.DISABLE_HMR !== 'true',
 		},
+		build: {
+			target: 'es2020',
+			cssCodeSplit: true,
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						motion: ['motion/react'],
+					},
+				},
+			},
+		},
 	};
 });

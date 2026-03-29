@@ -6,10 +6,12 @@ import {
 	CalendarDays,
 	ChartNoAxesCombined,
 	Keyboard,
+	Download,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { View } from '../App';
 import { Glow } from './ui';
+import { useInstallPrompt } from '../hooks/useInstallPrompt.ts';
 
 interface LayoutProps {
 	children: ReactNode;
@@ -31,9 +33,11 @@ const navItems: Array<{
 ];
 
 export default function Layout({ children, currentView, setView, onToggleShortcuts, isShortcutsOpen }: LayoutProps) {
+	const { canInstall, install } = useInstallPrompt();
+
 	return (
 		<div className='relative min-h-screen w-full max-w-md md:max-w-5xl lg:max-w-6xl xl:max-w-[88rem] 2xl:max-w-[104rem] mx-auto'>
-			<header className='fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#0e0e0e] to-transparent h-16'>
+			<header className='fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#0e0e0e] to-transparent h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)]'>
 				<div className='w-full max-w-md md:max-w-5xl lg:max-w-6xl xl:max-w-[88rem] 2xl:max-w-[104rem] mx-auto flex items-center justify-between px-6 md:px-8 h-full'>
 					<div className='flex items-center'>
 						{currentView !== 'home' && (
@@ -57,6 +61,16 @@ export default function Layout({ children, currentView, setView, onToggleShortcu
 					</div>
 
 					<div className='flex items-center gap-2'>
+						{canInstall && (
+							<button
+								onClick={install}
+								aria-label='Install app'
+								title='Install app'
+								className='flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90 text-[#ababab] hover:bg-white/5'
+							>
+								<Download className='w-5 h-5' />
+							</button>
+						)}
 						{!isShortcutsOpen && (
 							<button
 								onClick={onToggleShortcuts}
@@ -111,7 +125,7 @@ export default function Layout({ children, currentView, setView, onToggleShortcu
 				</div>
 			</header>
 
-			<main className='px-6 md:px-8 pt-16'>
+			<main className='px-6 md:px-8 pt-[calc(4rem+env(safe-area-inset-top))] pb-[max(0px,env(safe-area-inset-bottom))]'>
 				<div className='xl:grid xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8'>
 					<aside className='hidden xl:block pt-6'>
 						<div className='sticky top-24 space-y-4'>

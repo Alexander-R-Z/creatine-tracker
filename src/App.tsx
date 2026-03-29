@@ -1,19 +1,21 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Keyboard } from 'lucide-react';
 import { loadState, saveState, AppState, pruneLogs } from './lib/storage';
 import { cleanupExpiredMergeRollbackSnapshot } from './lib/backup';
 import Home from './components/Home';
-import History from './components/History';
-import Settings from './components/Settings';
 import Setup from './components/Setup';
 import Layout from './components/Layout';
-import Analytics from './components/Analytics';
 import { ShortcutDefinition, isModKeyPressed, useKeyboardShortcuts } from './lib/keyboard';
+
+const History = lazy(() => import('./components/History'));
+const Settings = lazy(() => import('./components/Settings'));
+const Analytics = lazy(() => import('./components/Analytics'));
 
 export type View = 'home' | 'history' | 'analytics' | 'settings' | 'setup';
 
 export default function App() {
+	const shouldReduceMotion = useReducedMotion();
 	const [state, setState] = useState<AppState>(() => {
 		const loaded = loadState();
 		// On app startup, prune old entries (>24 months) and clean expired rollback snapshots
@@ -140,19 +142,29 @@ export default function App() {
 			case 'home':
 				return <Home state={state} updateState={updateState} setView={setCurrentView} />;
 			case 'history':
-				return <History state={state} updateState={updateState} />;
+				return (
+					<Suspense fallback={<ViewFallback title='Loading history...' />}>
+						<History state={state} updateState={updateState} />
+					</Suspense>
+				);
 			case 'analytics':
-				return <Analytics state={state} setView={setCurrentView} />;
+				return (
+					<Suspense fallback={<ViewFallback title='Loading analytics...' />}>
+						<Analytics state={state} setView={setCurrentView} />
+					</Suspense>
+				);
 			case 'settings':
 				return (
-					<Settings
-						state={state}
-						updateState={updateState}
-						onReset={() => {
-							updateState((prev) => ({ ...prev, onboarded: false, logs: {} }));
-							setCurrentView('setup');
-						}}
-					/>
+					<Suspense fallback={<ViewFallback title='Loading settings...' />}>
+						<Settings
+							state={state}
+							updateState={updateState}
+							onReset={() => {
+								updateState((prev) => ({ ...prev, onboarded: false, logs: {} }));
+								setCurrentView('setup');
+							}}
+						/>
+					</Suspense>
 				);
 			default:
 				return <Home state={state} updateState={updateState} setView={setCurrentView} />;
@@ -165,10 +177,10 @@ export default function App() {
 				{currentView === 'setup' ? (
 					<motion.div
 						key='setup'
-						initial={{ opacity: 0 }}
+						initial={shouldReduceMotion ? false : { opacity: 0 }}
 						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						transition={{ duration: 0.3 }}
+						exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+						transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
 					>
 						{renderView()}
 					</motion.div>
@@ -181,10 +193,10 @@ export default function App() {
 					>
 						<motion.div
 							key={currentView}
-							initial={{ opacity: 0, y: 10 }}
+							initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
 							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							transition={{ duration: 0.3 }}
+							exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+							transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
 							className='pb-32'
 						>
 							{renderView()}
@@ -196,9 +208,9 @@ export default function App() {
 			<AnimatePresence>
 				{isShortcutsOpen && currentView !== 'setup' && (
 					<motion.div
-						initial={{ opacity: 0 }}
+						initial={shouldReduceMotion ? false : { opacity: 0 }}
 						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
+						exit={shouldReduceMotion ? undefined : { opacity: 0 }}
 						className='fixed inset-0 z-[90]'
 					>
 						<button
@@ -208,10 +220,10 @@ export default function App() {
 							aria-label='Close shortcut panel'
 						/>
 						<motion.section
-							initial={{ opacity: 0, y: 20, scale: 0.98 }}
+							initial={shouldReduceMotion ? false : { opacity: 0, y: 20, scale: 0.98 }}
 							animate={{ opacity: 1, y: 0, scale: 1 }}
-							exit={{ opacity: 0, y: 10, scale: 0.98 }}
-							transition={{ duration: 0.18 }}
+							exit={shouldReduceMotion ? undefined : { opacity: 0, y: 10, scale: 0.98 }}
+							transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
 							className='relative mx-auto mt-20 w-[min(92vw,760px)] rounded-[2rem] border border-white/10 bg-[#101010]/95 p-6 md:p-8 shadow-2xl'
 						>
 							<div className='flex items-center gap-3 mb-5'>
@@ -300,5 +312,11 @@ export default function App() {
 				)}
 			</AnimatePresence>
 		</div>
+	);
+}
+
+function ViewFallback({ title }: { title: string }) {
+	return (
+		<div className='rounded-[2rem] border border-white/10 bg-[#121212]/80 p-6 text-sm text-[#9b9b9b]'>{title}</div>
 	);
 }
