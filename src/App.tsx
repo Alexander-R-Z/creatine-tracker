@@ -6,6 +6,8 @@ import { cleanupExpiredMergeRollbackSnapshot } from './lib/backup';
 import Home from './components/Home';
 import Setup from './components/Setup';
 import Layout from './components/Layout';
+import { StatusIndicator } from './components/StatusIndicator';
+import { useServiceWorkerStatus } from './hooks/useServiceWorkerStatus';
 import { ShortcutDefinition, isModKeyPressed, useKeyboardShortcuts } from './lib/keyboard';
 
 const History = lazy(() => import('./components/History'));
@@ -16,6 +18,7 @@ export type View = 'home' | 'history' | 'analytics' | 'settings' | 'setup';
 
 export default function App() {
 	const shouldReduceMotion = useReducedMotion();
+	const { status, hasUpdate } = useServiceWorkerStatus();
 	const [state, setState] = useState<AppState>(() => {
 		const loaded = loadState();
 		// On app startup, prune old entries (>24 months) and clean expired rollback snapshots
@@ -311,6 +314,8 @@ export default function App() {
 					</motion.div>
 				)}
 			</AnimatePresence>
+
+			<StatusIndicator status={status} hasUpdate={hasUpdate} />
 		</div>
 	);
 }
