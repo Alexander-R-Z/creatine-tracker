@@ -1,20 +1,8 @@
 import { ReactNode } from 'react';
-import {
-	Settings as SettingsIcon,
-	ChevronLeft,
-	House,
-	CalendarDays,
-	ChartNoAxesCombined,
-	Keyboard,
-	Download,
-	Ellipsis,
-	X,
-} from 'lucide-react';
+import { Settings as SettingsIcon, ChevronLeft, House, CalendarDays } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { View } from '../App';
 import { Glow } from './ui';
-import { useInstallPrompt } from '../hooks/useInstallPrompt.ts';
-import { useEffect, useMemo, useState } from 'react';
 
 interface LayoutProps {
 	children: ReactNode;
@@ -31,26 +19,12 @@ const navItems: Array<{
 }> = [
 	{ view: 'home', label: 'Home', icon: House },
 	{ view: 'history', label: 'History', icon: CalendarDays },
-	{ view: 'analytics', label: 'Analytics', icon: ChartNoAxesCombined },
 	{ view: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export default function Layout({ children, currentView, setView, onToggleShortcuts, isShortcutsOpen }: LayoutProps) {
-	const { canInstall, install } = useInstallPrompt();
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-	useEffect(() => {
-		setIsMobileMenuOpen(false);
-	}, [currentView]);
-
-	const mobileNavItems = useMemo(
-		() => [
-			{ view: 'history' as const, label: 'History', icon: CalendarDays },
-			{ view: 'analytics' as const, label: 'Analytics', icon: ChartNoAxesCombined },
-			{ view: 'settings' as const, label: 'Settings', icon: SettingsIcon },
-		],
-		[],
-	);
+	void onToggleShortcuts;
+	void isShortcutsOpen;
 
 	return (
 		<div className='relative min-h-screen w-full max-w-md md:max-w-5xl lg:max-w-6xl xl:max-w-[88rem] 2xl:max-w-[104rem] mx-auto'>
@@ -84,133 +58,24 @@ export default function Layout({ children, currentView, setView, onToggleShortcu
 						</div>
 
 						<div className='flex items-center justify-end'>
-							<div className='flex items-center gap-1 md:hidden'>
-								{mobileNavItems.map((item) => {
-									const Icon = item.icon;
-									const isActive = currentView === item.view;
-									return (
-										<button
-											key={item.view}
-											onClick={() => setView(item.view)}
-											aria-label={item.label}
-											title={item.label}
-											className={cn(
-												'w-11 h-11 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-150 active:scale-90',
-												isActive
-													? 'bg-[#7f98ff]/16 text-white'
-													: 'text-[#ababab] hover:bg-white/5',
-											)}
-										>
-											<Icon className={cn('w-5 h-5', isActive && 'text-[#00fdc1]')} />
-										</button>
-									);
-								})}
-								<button
-									onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-									aria-label='More actions'
-									title='More actions'
-									className='w-11 h-11 rounded-full flex items-center justify-center text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-								>
-									{isMobileMenuOpen ? <X className='w-5 h-5' /> : <Ellipsis className='w-5 h-5' />}
-								</button>
-							</div>
-
-							<div className='hidden md:flex items-center gap-1'>
-								{canInstall && (
-									<button
-										onClick={install}
-										aria-label='Install app'
-										title='Install app'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<Download className='w-5 h-5' />
-									</button>
+							<button
+								onClick={() => setView('settings')}
+								aria-label='Open settings'
+								title='Open settings'
+								className={cn(
+									'w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-150 active:scale-90',
+									currentView === 'settings'
+										? 'bg-[#7f98ff]/16 text-white'
+										: 'text-[#ababab] hover:bg-white/5',
 								)}
-								{!isShortcutsOpen && (
-									<button
-										onClick={onToggleShortcuts}
-										aria-label='Open keyboard shortcuts'
-										title='Open keyboard shortcuts'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<Keyboard className='w-5 h-5' />
-									</button>
-								)}
-								{currentView !== 'history' && (
-									<button
-										onClick={() => setView('history')}
-										aria-label='Open history'
-										title='Open history'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<CalendarDays className='w-5 h-5' />
-									</button>
-								)}
-								{currentView !== 'analytics' && (
-									<button
-										onClick={() => setView('analytics')}
-										aria-label='Open analytics'
-										title='Open analytics'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<ChartNoAxesCombined className='w-5 h-5' />
-									</button>
-								)}
-								{currentView !== 'home' && (
-									<button
-										onClick={() => setView('home')}
-										aria-label='Go to home'
-										title='Go to home'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<House className='w-5 h-5' />
-									</button>
-								)}
-								{currentView !== 'settings' && (
-									<button
-										onClick={() => setView('settings')}
-										aria-label='Open settings'
-										title='Open settings'
-										className='flex items-center justify-center w-10 h-10 rounded-full text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-90'
-									>
-										<SettingsIcon className='w-5 h-5' />
-									</button>
-								)}
-							</div>
+							>
+								<SettingsIcon
+									className={cn('w-5 h-5', currentView === 'settings' && 'text-[#00fdc1]')}
+								/>
+							</button>
 						</div>
 					</div>
 				</div>
-
-				{isMobileMenuOpen && (
-					<div className='md:hidden absolute top-[calc(4rem+env(safe-area-inset-top)-0.25rem)] right-6 z-50 w-[13rem] rounded-2xl border border-white/10 bg-[#111111]/95 backdrop-blur-xl p-2 shadow-2xl'>
-						<button
-							onClick={() => {
-								setView('home');
-								setIsMobileMenuOpen(false);
-							}}
-							className='w-full h-11 rounded-xl px-3 flex items-center gap-3 text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-[0.98]'
-							aria-label='Go to home'
-							title='Go to home'
-						>
-							<House className='w-4 h-4' />
-							<span className='text-xs font-bold uppercase tracking-[0.16em]'>Home</span>
-						</button>
-						{canInstall && (
-							<button
-								onClick={() => {
-									install();
-									setIsMobileMenuOpen(false);
-								}}
-								className='w-full h-11 rounded-xl px-3 flex items-center gap-3 text-[#ababab] hover:bg-white/5 transition-[background-color,color,transform] duration-150 active:scale-[0.98]'
-								aria-label='Install app'
-								title='Install app'
-							>
-								<Download className='w-4 h-4' />
-								<span className='text-xs font-bold uppercase tracking-[0.16em]'>Install</span>
-							</button>
-						)}
-					</div>
-				)}
 			</header>
 
 			<main className='px-6 md:px-8 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-[max(0px,env(safe-area-inset-bottom))]'>

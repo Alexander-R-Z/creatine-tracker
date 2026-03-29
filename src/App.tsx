@@ -12,9 +12,8 @@ import { ShortcutDefinition, isModKeyPressed, useKeyboardShortcuts } from './lib
 
 const History = lazy(() => import('./components/History'));
 const Settings = lazy(() => import('./components/Settings'));
-const Analytics = lazy(() => import('./components/Analytics'));
 
-export type View = 'home' | 'history' | 'analytics' | 'settings' | 'setup';
+export type View = 'home' | 'history' | 'settings' | 'setup';
 
 export default function App() {
 	const shouldReduceMotion = useReducedMotion();
@@ -80,18 +79,10 @@ export default function App() {
 				enabled: currentView !== 'setup',
 			},
 			{
-				id: 'view-analytics',
-				description: 'Go to Analytics',
-				combo: 'Ctrl/Cmd + 3',
-				match: (event) => isModKeyPressed(event) && event.key === '3',
-				action: () => setCurrentView('analytics'),
-				enabled: currentView !== 'setup',
-			},
-			{
 				id: 'view-settings',
 				description: 'Go to Settings',
-				combo: 'Ctrl/Cmd + 4',
-				match: (event) => isModKeyPressed(event) && event.key === '4',
+				combo: 'Ctrl/Cmd + 3',
+				match: (event) => isModKeyPressed(event) && event.key === '3',
 				action: () => setCurrentView('settings'),
 				enabled: currentView !== 'setup',
 			},
@@ -148,12 +139,6 @@ export default function App() {
 				return (
 					<Suspense fallback={<ViewFallback title='Loading history...' />}>
 						<History state={state} updateState={updateState} />
-					</Suspense>
-				);
-			case 'analytics':
-				return (
-					<Suspense fallback={<ViewFallback title='Loading analytics...' />}>
-						<Analytics state={state} setView={setCurrentView} />
 					</Suspense>
 				);
 			case 'settings':
@@ -260,15 +245,9 @@ export default function App() {
 											</kbd>
 										</div>
 										<div className='flex items-center justify-between rounded-xl border border-white/10 bg-[#171717] px-3 py-2'>
-											<span className='text-sm text-[#ababab]'>Go to Analytics</span>
-											<kbd className='rounded-md bg-[#0f0f0f] px-2 py-1 text-xs font-bold text-white'>
-												Ctrl/Cmd + 3
-											</kbd>
-										</div>
-										<div className='flex items-center justify-between rounded-xl border border-white/10 bg-[#171717] px-3 py-2'>
 											<span className='text-sm text-[#ababab]'>Go to Settings</span>
 											<kbd className='rounded-md bg-[#0f0f0f] px-2 py-1 text-xs font-bold text-white'>
-												Ctrl/Cmd + 4
+												Ctrl/Cmd + 3
 											</kbd>
 										</div>
 									</div>

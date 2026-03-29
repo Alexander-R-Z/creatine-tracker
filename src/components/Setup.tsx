@@ -9,13 +9,16 @@ interface SetupProps {
 }
 
 export default function Setup({ onComplete }: SetupProps) {
+	const GRAM_STEP = 0.5;
+	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
+	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
 	const [weight, setWeight] = useState(70);
 	const [perfGoal, setPerfGoal] = useState<'gym' | 'gym_more'>('gym');
 
 	const recommendedDose = useMemo(() => {
 		const ratio = perfGoal === 'gym' ? 0.1 : 0.2;
 		const max = perfGoal === 'gym' ? 10 : 22;
-		const dose = Math.floor(weight * ratio);
+		const dose = snapToHalfStep(weight * ratio);
 		return Math.min(dose, max);
 	}, [weight, perfGoal]);
 
@@ -24,8 +27,8 @@ export default function Setup({ onComplete }: SetupProps) {
 
 	// Sync daily goal with recommended dose when weight or goal changes
 	useEffect(() => {
-		setDailyGoal(recommendedDose);
-		setPortionSize(recommendedDose);
+		setDailyGoal(snapToHalfStep(recommendedDose));
+		setPortionSize(snapToHalfStep(recommendedDose));
 	}, [recommendedDose]);
 
 	return (
@@ -159,7 +162,7 @@ export default function Setup({ onComplete }: SetupProps) {
 						</label>
 						<div className='mb-3'>
 							<span className='text-[#00fdc1] font-headline font-extrabold text-3xl tracking-tighter'>
-								{dailyGoal}
+								{formatGrams(dailyGoal)}
 								<span className='text-xs font-normal text-[#ababab]'>g</span>
 							</span>
 						</div>
@@ -168,12 +171,12 @@ export default function Setup({ onComplete }: SetupProps) {
 							type='range'
 							min='1'
 							max='25'
-							step='1'
+							step='0.5'
 							value={dailyGoal}
 							onChange={(e) => {
-								const val = parseFloat(e.target.value);
+								const val = snapToHalfStep(parseFloat(e.target.value));
 								setDailyGoal(val);
-								setPortionSize(val);
+								setPortionSize((prev) => Math.min(prev, val));
 							}}
 							aria-label='Daily goal'
 							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#00fdc1]'
@@ -190,7 +193,7 @@ export default function Setup({ onComplete }: SetupProps) {
 						</label>
 						<div className='mb-3'>
 							<span className='text-[#7f98ff] font-headline font-extrabold text-3xl tracking-tighter'>
-								{portionSize}
+								{formatGrams(portionSize)}
 								<span className='text-xs font-normal text-[#ababab]'>g</span>
 							</span>
 						</div>
@@ -199,9 +202,9 @@ export default function Setup({ onComplete }: SetupProps) {
 							type='range'
 							min='1'
 							max={dailyGoal}
-							step='1'
+							step='0.5'
 							value={portionSize}
-							onChange={(e) => setPortionSize(parseFloat(e.target.value))}
+							onChange={(e) => setPortionSize(snapToHalfStep(parseFloat(e.target.value)))}
 							aria-label='Portion size'
 							className='w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#7f98ff]'
 						/>
@@ -212,7 +215,7 @@ export default function Setup({ onComplete }: SetupProps) {
 				<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6'>
 					<div className='bg-[#0e0e0e] border border-white/5 rounded-xl p-3 text-xs'>
 						<div className='text-[#ababab] font-semibold mb-1'>Recommended</div>
-						<div className='text-[#00fdc1] font-bold'>{recommendedDose}g</div>
+						<div className='text-[#00fdc1] font-bold'>{formatGrams(recommendedDose)}g</div>
 						<div className='text-[#7c7c7c] text-[10px]'>Based on your weight</div>
 					</div>
 					<div className='bg-[#0e0e0e] border border-white/5 rounded-xl p-3 text-xs'>
@@ -257,7 +260,14 @@ export default function Setup({ onComplete }: SetupProps) {
 				</div>
 
 				<button
-					onClick={() => onComplete({ dailyGoal, portionSize, weight, goal: perfGoal })}
+					onClick={() =>
+						onComplete({
+							dailyGoal: snapToHalfStep(dailyGoal),
+							portionSize: snapToHalfStep(portionSize),
+							weight,
+							goal: perfGoal,
+						})
+					}
 					className='w-full h-16 rounded-full bg-gradient-to-r from-[#00edb4] to-[#aaffdc] font-headline font-extrabold text-[#004734] uppercase tracking-widest text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl shadow-[#00fdc1]/10 hover:shadow-[#00fdc1]/20 mt-8'
 				>
 					Start Tracking

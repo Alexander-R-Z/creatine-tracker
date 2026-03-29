@@ -28,6 +28,12 @@ export interface AppState {
 }
 
 const STORAGE_KEY = 'obsidian_creatine_data';
+const GRAM_STEP = 0.5;
+
+function snapToHalfStep(value: number): number {
+	return Math.round(value / GRAM_STEP) * GRAM_STEP;
+}
+
 function createDefaultState(): AppState {
 	return {
 		version: CURRENT_SCHEMA_VERSION,
@@ -64,9 +70,11 @@ function sanitizeSettings(value: unknown): Settings {
 	const defaults = createDefaultState().settings;
 	if (!isObject(value)) return defaults;
 
-	const dailyGoal = isFiniteNumber(value.dailyGoal) ? Math.max(1, Math.round(value.dailyGoal)) : defaults.dailyGoal;
+	const dailyGoal = isFiniteNumber(value.dailyGoal)
+		? snapToHalfStep(Math.max(1, value.dailyGoal))
+		: defaults.dailyGoal;
 	const rawPortion = isFiniteNumber(value.portionSize)
-		? Math.max(1, Math.round(value.portionSize))
+		? snapToHalfStep(Math.max(1, value.portionSize))
 		: defaults.portionSize;
 	const portionSize = Math.min(rawPortion, dailyGoal);
 
@@ -92,7 +100,7 @@ function sanitizeEntries(value: unknown): LogEntry[] {
 		.filter((entry): entry is Record<string, unknown> => isObject(entry))
 		.map((entry) => ({
 			time: typeof entry.time === 'string' ? entry.time : new Date(0).toISOString(),
-			amount: isFiniteNumber(entry.amount) ? Math.max(0, entry.amount) : 0,
+			amount: isFiniteNumber(entry.amount) ? snapToHalfStep(Math.max(0, entry.amount)) : 0,
 		}))
 		.filter((entry) => entry.amount > 0);
 }
@@ -106,8 +114,8 @@ function sanitizeLogs(value: unknown): Record<string, DayLog> {
 
 		const entries = sanitizeEntries(dayLog.entries);
 		const total = isFiniteNumber(dayLog.total)
-			? Math.max(0, dayLog.total)
-			: entries.reduce((sum, entry) => sum + entry.amount, 0);
+			? snapToHalfStep(Math.max(0, dayLog.total))
+			: snapToHalfStep(entries.reduce((sum, entry) => sum + entry.amount, 0));
 
 		logs[dateKey] = {
 			total,
@@ -169,10 +177,11 @@ export function getLogForDate(state: AppState, dateStr: string): DayLog {
 export function addEntry(state: AppState, amount: number): AppState {
 	const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
 	const currentLog = getLogForDate(state, dateStr);
+	const safeAmount = snapToHalfStep(Math.max(0, amount));
 
 	const newLog: DayLog = {
-		total: currentLog.total + amount,
-		entries: [...currentLog.entries, { time: new Date().toISOString(), amount }],
+		total: snapToHalfStep(currentLog.total + safeAmount),
+		entries: [...currentLog.entries, { time: new Date().toISOString(), amount: safeAmount }],
 	};
 
 	return {
@@ -194,7 +203,7 @@ export function undoLastEntry(state: AppState): AppState {
 	const newEntries = currentLog.entries.slice(0, -1);
 
 	const newLog: DayLog = {
-		total: Math.max(0, currentLog.total - lastEntry.amount),
+		total: snapToHalfStep(Math.max(0, currentLog.total - lastEntry.amount)),
 		entries: newEntries,
 	};
 
@@ -221,7 +230,7 @@ export function updateDayLog(state: AppState, dateStr: string, newTotal: number)
 
 	const newLog: DayLog = {
 		...currentLog,
-		total: Math.max(0, newTotal),
+		total: snapToHalfStep(Math.max(0, newTotal)),
 	};
 
 	// If the log is now empty (total=0, no entries), remove the day entirely

@@ -15,12 +15,11 @@ import {
 	CheckCircle2,
 	Calendar,
 	Activity,
-	ChartNoAxesCombined,
 	ChevronRight,
 } from 'lucide-react';
 import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry, updateDayLog } from '../lib/storage';
 import { cn } from '../lib/utils';
-import { format, differenceInHours, parseISO, subDays } from 'date-fns';
+import { addDays, format, differenceInHours, parseISO, startOfWeek, subDays } from 'date-fns';
 import { View } from '../App';
 
 interface HomeProps {
@@ -30,6 +29,9 @@ interface HomeProps {
 }
 
 export default function Home({ state, updateState, setView }: HomeProps) {
+	const GRAM_STEP = 0.5;
+	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
+	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
 	const prefersReducedMotion = useReducedMotion();
 	const dateStr = getEffectiveDate(new Date(), state.settings.resetTime);
 	const log = getLogForDate(state, dateStr);
@@ -52,7 +54,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 	const stats = useMemo(() => {
 		const logDates = Object.keys(state.logs).sort().reverse();
-		if (logDates.length === 0) return { currentStreak: 0, bestStreak: 0, finished: 0, active: 0, avg: 0 };
+		if (logDates.length === 0) return { currentStreak: 0, bestStreak: 0, finished: 0, active: 0, avg: '0' };
 
 		let currentStreak = 0;
 		let bestStreak = 0;
@@ -103,7 +105,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			bestStreak,
 			finished,
 			active: sortedDates.length,
-			avg: sortedDates.length > 0 ? (totalGrams / sortedDates.length).toFixed(1) : 0,
+			avg: sortedDates.length > 0 ? formatGrams(snapToHalfStep(totalGrams / sortedDates.length)) : '0',
 		};
 	}, [state.logs, state.settings.dailyGoal]);
 
@@ -117,12 +119,12 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	};
 
 	const handleStartCorrectToday = () => {
-		setCorrectValue(log.total);
+		setCorrectValue(snapToHalfStep(log.total));
 		setIsCorrectingToday(true);
 	};
 
 	const handleApplyCorrectToday = () => {
-		updateState((prev) => updateDayLog(prev, dateStr, Math.max(0, correctValue)));
+		updateState((prev) => updateDayLog(prev, dateStr, Math.max(0, snapToHalfStep(correctValue))));
 		setIsCorrectingToday(false);
 	};
 
@@ -150,8 +152,9 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 
 	const weeklyData = useMemo(() => {
 		const effectiveToday = parseISO(dateStr);
+		const monday = startOfWeek(effectiveToday, { weekStartsOn: 1 });
 		return Array.from({ length: 7 }).map((_, i) => {
-			const dayDate = subDays(effectiveToday, 6 - i);
+			const dayDate = addDays(monday, i);
 			const dayKey = format(dayDate, 'yyyy-MM-dd');
 			const dLog = getLogForDate(state, dayKey);
 			return {
@@ -160,7 +163,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 				isToday: dayKey === dateStr,
 			};
 		});
-	}, [state.logs, dateStr]);
+	}, [state.logs, dateStr, state.settings.resetTime]);
 
 	const weeklyChartMax = useMemo(() => {
 		const maxTotal = weeklyData.reduce((max, day) => Math.max(max, day.total), 0);
@@ -255,7 +258,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							<button
 								aria-label='Decrease next dose amount'
 								title='Decrease next dose amount'
-								onClick={() => setPortionModifier((prev) => prev - 1)}
+								onClick={() => setPortionModifier((prev) => snapToHalfStep(prev - GRAM_STEP))}
 								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-[color,background-color,transform] duration-150 hover:text-white border border-white/5'
 							>
 								<Minus className='w-5 h-5' />
@@ -264,7 +267,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							<div className='flex flex-col items-center'>
 								<div className='flex items-baseline relative'>
 									<span className='text-4xl font-headline font-black text-white'>
-										{effectivePortion}
+										{formatGrams(Math.max(0, snapToHalfStep(effectivePortion)))}
 									</span>
 									<span className='text-sm font-bold text-[#444444] ml-1'>g</span>
 									{isSmartCapped && (
@@ -283,7 +286,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							<button
 								aria-label='Increase next dose amount'
 								title='Increase next dose amount'
-								onClick={() => setPortionModifier((prev) => prev + 1)}
+								onClick={() => setPortionModifier((prev) => snapToHalfStep(prev + GRAM_STEP))}
 								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-[color,background-color,transform] duration-150 hover:text-white border border-white/5'
 							>
 								<Plus className='w-5 h-5' />
@@ -335,7 +338,9 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							>
 								<div className='flex items-center gap-2'>
 									<button
-										onClick={() => setCorrectValue((prev) => Math.max(0, prev - 1))}
+										onClick={() =>
+											setCorrectValue((prev) => Math.max(0, snapToHalfStep(prev - GRAM_STEP)))
+										}
 										aria-label='Decrease today total'
 										title='Decrease today total'
 										className='w-11 h-11 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center transition-[background-color,border-color,transform] duration-150 active:scale-90'
@@ -343,10 +348,10 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 										<Minus className='w-4 h-4' />
 									</button>
 									<span className='text-lg font-headline font-bold text-white w-14 text-center'>
-										{correctValue}g
+										{formatGrams(correctValue)}g
 									</span>
 									<button
-										onClick={() => setCorrectValue((prev) => prev + 1)}
+										onClick={() => setCorrectValue((prev) => snapToHalfStep(prev + GRAM_STEP))}
 										aria-label='Increase today total'
 										title='Increase today total'
 										className='w-11 h-11 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center transition-[background-color,border-color,transform] duration-150 active:scale-90'
@@ -394,15 +399,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							</span>
 							<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
 						</button>
-						<button
-							onClick={() => setView('analytics')}
-							className='md:hidden flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#6f6f6f] hover:text-[#ababab] transition-colors'
-							aria-label='Open analytics'
-							title='Open analytics'
-						>
-							<ChartNoAxesCombined className='w-3.5 h-3.5' />
-							<span>Analytics</span>
-						</button>
+						<div className='md:hidden w-[3.5rem]' aria-hidden='true' />
 					</div>
 					<div className='relative px-2'>
 						<div className='relative h-28 w-full max-w-[420px] md:max-w-[720px] lg:max-w-full mx-auto'>

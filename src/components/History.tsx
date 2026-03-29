@@ -12,6 +12,9 @@ interface HistoryProps {
 
 export default function History({ state, updateState }: HistoryProps) {
 	const MONTHS_BATCH_SIZE = 12;
+	const GRAM_STEP = 0.5;
+	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
+	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
 
 	const last7Days = useMemo(() => {
 		const effectiveToday = parseISO(getEffectiveDate(new Date(), state.settings.resetTime));
@@ -123,12 +126,12 @@ export default function History({ state, updateState }: HistoryProps) {
 
 	const startEditing = (dateStr: string, currentTotal: number) => {
 		setEditingDate(dateStr);
-		setEditValue(currentTotal);
+		setEditValue(snapToHalfStep(currentTotal));
 	};
 
 	const saveEdit = () => {
 		if (editingDate) {
-			updateState((prev) => updateDayLog(prev, editingDate, editValue));
+			updateState((prev) => updateDayLog(prev, editingDate, snapToHalfStep(editValue)));
 			setEditingDate(null);
 		}
 	};
@@ -203,18 +206,24 @@ export default function History({ state, updateState }: HistoryProps) {
 													<button
 														aria-label='Decrease logged amount'
 														title='Decrease logged amount'
-														onClick={() => setEditValue((prev) => Math.max(0, prev - 1))}
+														onClick={() =>
+															setEditValue((prev) =>
+																Math.max(0, snapToHalfStep(prev - GRAM_STEP)),
+															)
+														}
 														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Minus className='w-4 h-4' />
 													</button>
 													<span className='text-xl font-headline font-bold text-white w-14 text-center'>
-														{editValue}g
+														{formatGrams(editValue)}g
 													</span>
 													<button
 														aria-label='Increase logged amount'
 														title='Increase logged amount'
-														onClick={() => setEditValue((prev) => prev + 1)}
+														onClick={() =>
+															setEditValue((prev) => snapToHalfStep(prev + GRAM_STEP))
+														}
 														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Plus className='w-4 h-4' />
@@ -243,7 +252,7 @@ export default function History({ state, updateState }: HistoryProps) {
 															isCompleted ? 'text-[#00fdc1]' : 'text-white',
 														)}
 													>
-														{log.total}
+														{formatGrams(log.total)}
 														<span className='text-xs font-medium text-[#ababab] ml-0.5'>
 															/ {state.settings.dailyGoal}g
 														</span>

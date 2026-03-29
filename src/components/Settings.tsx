@@ -32,6 +32,9 @@ interface SettingsProps {
 }
 
 export default function Settings({ state, updateState, onReset }: SettingsProps) {
+	const GRAM_STEP = 0.5;
+	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
+	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
 	const [isCalibrating, setIsCalibrating] = useState(false);
 	const [isImportModeOpen, setIsImportModeOpen] = useState(false);
 	const [pendingImportState, setPendingImportState] = useState<AppState | null>(null);
@@ -49,15 +52,15 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 	const recommendedDose = useMemo(() => {
 		const ratio = perfGoal === 'gym' ? 0.1 : 0.2;
 		const max = perfGoal === 'gym' ? 10 : 22;
-		const dose = Math.floor(weight * ratio);
+		const dose = snapToHalfStep(weight * ratio);
 		return Math.min(dose, max);
 	}, [weight, perfGoal]);
 
 	const handleApplyCalibration = () => {
 		updateState((prev) => {
-			const newDailyGoal = recommendedDose;
+			const newDailyGoal = snapToHalfStep(recommendedDose);
 			// Ensure portion size doesn't exceed new daily goal
-			const newPortionSize = Math.min(prev.settings.portionSize, newDailyGoal);
+			const newPortionSize = snapToHalfStep(Math.min(prev.settings.portionSize, newDailyGoal));
 			return {
 				...prev,
 				settings: {
@@ -74,8 +77,8 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 
 	const updateDailyGoal = (val: number) => {
 		updateState((prev) => {
-			const newGoal = Math.max(1, val);
-			const newPortion = Math.min(prev.settings.portionSize, newGoal);
+			const newGoal = snapToHalfStep(Math.max(1, val));
+			const newPortion = snapToHalfStep(Math.min(prev.settings.portionSize, newGoal));
 			return {
 				...prev,
 				settings: { ...prev.settings, dailyGoal: newGoal, portionSize: newPortion },
@@ -86,7 +89,10 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 	const updatePortionSize = (val: number) => {
 		updateState((prev) => ({
 			...prev,
-			settings: { ...prev.settings, portionSize: Math.min(Math.max(1, val), prev.settings.dailyGoal) },
+			settings: {
+				...prev.settings,
+				portionSize: snapToHalfStep(Math.min(Math.max(1, val), prev.settings.dailyGoal)),
+			},
 		}));
 	};
 
@@ -214,14 +220,14 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 								</span>
 								<div className='flex items-baseline gap-1'>
 									<span className='text-2xl font-headline font-extrabold text-[#00fdc1]'>
-										{state.settings.dailyGoal}
+										{formatGrams(state.settings.dailyGoal)}
 									</span>
 									<span className='text-[#ababab] text-sm'>grams</span>
 								</div>
 							</div>
 							<div className='flex items-center gap-2'>
 								<button
-									onClick={() => updateDailyGoal(state.settings.dailyGoal - 1)}
+									onClick={() => updateDailyGoal(state.settings.dailyGoal - GRAM_STEP)}
 									disabled={!canDecreaseDailyGoal}
 									aria-label='Decrease daily amount'
 									title='Decrease daily amount'
@@ -235,7 +241,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 									<Minus className='w-4 h-4' />
 								</button>
 								<button
-									onClick={() => updateDailyGoal(state.settings.dailyGoal + 1)}
+									onClick={() => updateDailyGoal(state.settings.dailyGoal + GRAM_STEP)}
 									aria-label='Increase daily amount'
 									title='Increase daily amount'
 									className='w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white active:scale-90 hover:bg-white/10 transition-all'
@@ -254,14 +260,14 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 								</span>
 								<div className='flex items-baseline gap-1'>
 									<span className='text-2xl font-headline font-extrabold text-[#7f98ff]'>
-										{state.settings.portionSize}
+										{formatGrams(state.settings.portionSize)}
 									</span>
 									<span className='text-[#ababab] text-sm'>grams</span>
 								</div>
 							</div>
 							<div className='flex items-center gap-2'>
 								<button
-									onClick={() => updatePortionSize(state.settings.portionSize - 1)}
+									onClick={() => updatePortionSize(state.settings.portionSize - GRAM_STEP)}
 									disabled={!canDecreasePortionSize}
 									aria-label='Decrease portion size'
 									title='Decrease portion size'
@@ -275,7 +281,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 									<Minus className='w-4 h-4' />
 								</button>
 								<button
-									onClick={() => updatePortionSize(state.settings.portionSize + 1)}
+									onClick={() => updatePortionSize(state.settings.portionSize + GRAM_STEP)}
 									disabled={!canIncreasePortionSize}
 									aria-label='Increase portion size'
 									title='Increase portion size'
@@ -313,7 +319,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 										Daily Goal
 									</div>
 									<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
-										{state.settings.dailyGoal}g
+										{formatGrams(state.settings.dailyGoal)}g
 									</div>
 								</div>
 								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
@@ -321,7 +327,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 										Portion
 									</div>
 									<div className='text-xl font-headline font-black text-[#7f98ff] mt-1'>
-										{state.settings.portionSize}g
+										{formatGrams(state.settings.portionSize)}g
 									</div>
 								</div>
 								<div className='rounded-xl bg-[#171717] border border-white/5 p-3'>
@@ -337,7 +343,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 										Suggested
 									</div>
 									<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
-										{recommendedDose}g
+										{formatGrams(recommendedDose)}g
 									</div>
 								</div>
 							</div>
