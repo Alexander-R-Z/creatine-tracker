@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { ArrowRight, Plus, Minus, Zap, Target, Info } from 'lucide-react';
 import { Settings } from '../lib/storage';
 import { cn } from '../lib/utils';
-import { Button, Card } from './ui';
 
 interface SetupProps {
 	onComplete: (settings: Settings) => void;
@@ -45,7 +44,7 @@ export default function Setup({ onComplete }: SetupProps) {
 					<h1 className='font-headline font-extrabold text-3xl tracking-tight'>Setup</h1>
 				</div>
 				<p className='text-[#ababab] text-xs leading-relaxed'>
-					Let's customize your creatine tracker. Your settings help us recommend the optimal daily dose.
+					Let's tune your tracker. These values set your daily target and keep logging quick.
 				</p>
 			</motion.div>
 
@@ -70,7 +69,7 @@ export default function Setup({ onComplete }: SetupProps) {
 								onClick={() => setWeight((prev) => Math.max(20, prev - 1))}
 								aria-label='Decrease body weight'
 								title='Decrease body weight'
-								className='w-10 h-10 rounded-full bg-[#1a1a1a] hover:bg-[#262626] flex items-center justify-center text-white active:scale-90 transition-all'
+								className='w-11 h-11 rounded-full bg-[#1a1a1a] hover:bg-[#262626] flex items-center justify-center text-white active:scale-90 transition-all'
 							>
 								<Minus className='w-4 h-4' />
 							</button>
@@ -78,15 +77,32 @@ export default function Setup({ onComplete }: SetupProps) {
 								onClick={() => setWeight((prev) => Math.min(250, prev + 1))}
 								aria-label='Increase body weight'
 								title='Increase body weight'
-								className='w-10 h-10 rounded-full bg-[#1a1a1a] hover:bg-[#262626] flex items-center justify-center text-white active:scale-90 transition-all'
+								className='w-11 h-11 rounded-full bg-[#1a1a1a] hover:bg-[#262626] flex items-center justify-center text-white active:scale-90 transition-all'
 							>
 								<Plus className='w-4 h-4' />
 							</button>
 						</div>
 					</div>
 
+					<div className='grid grid-cols-3 gap-2 mb-4'>
+						{[60, 75, 90].map((preset) => (
+							<button
+								key={preset}
+								onClick={() => setWeight(preset)}
+								className={cn(
+									'min-h-[44px] rounded-lg border text-xs font-bold tracking-wide transition-all',
+									weight === preset
+										? 'bg-[#00fdc1]/15 border-[#00fdc1]/40 text-[#00fdc1]'
+										: 'bg-[#0e0e0e] border-white/10 text-[#ababab] hover:border-white/20',
+								)}
+							>
+								{preset} kg
+							</button>
+						))}
+					</div>
+
 					<div className='text-xs text-[#7c7c7c] bg-[#0e0e0e]/50 border border-white/5 rounded-lg p-3'>
-						Used to calculate your recommended daily dose based on your fitness goal.
+						Used to recommend a practical daily target for your tracking routine.
 					</div>
 				</div>
 
@@ -95,7 +111,7 @@ export default function Setup({ onComplete }: SetupProps) {
 					<label className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#ababab] block mb-4'>
 						Performance Goal
 					</label>
-					<div className='grid grid-cols-2 gap-3'>
+					<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
 						<button
 							onClick={() => setPerfGoal('gym')}
 							className={cn(
@@ -107,10 +123,10 @@ export default function Setup({ onComplete }: SetupProps) {
 						>
 							<div className='flex items-center gap-2 mb-2'>
 								<Target className='w-4 h-4 text-[#00fdc1]' />
-								<span className='block font-bold text-sm'>Gym</span>
+								<span className='block font-bold text-sm'>Routine Training</span>
 							</div>
 							<span className='text-[11px] text-[#ababab] block leading-tight'>Recommended: 0.1g/kg</span>
-							<span className='text-[10px] text-[#7c7c7c]'>Light activity</span>
+							<span className='text-[10px] text-[#7c7c7c]'>Steady pace</span>
 						</button>
 						<button
 							onClick={() => setPerfGoal('gym_more')}
@@ -123,21 +139,21 @@ export default function Setup({ onComplete }: SetupProps) {
 						>
 							<div className='flex items-center gap-2 mb-2'>
 								<Zap className='w-4 h-4 text-[#7f98ff]' />
-								<span className='block font-bold text-sm'>Gym & More</span>
+								<span className='block font-bold text-sm'>High Output</span>
 							</div>
 							<span className='text-[11px] text-[#ababab] block leading-tight'>Recommended: 0.2g/kg</span>
-							<span className='text-[10px] text-[#7c7c7c]'>Heavy activity</span>
+							<span className='text-[10px] text-[#7c7c7c]'>Higher demand</span>
 						</button>
 					</div>
 				</div>
 
 				{/* Daily Goal & Portion Size Section */}
-				<div className='grid grid-cols-2 gap-4 mb-4'>
+				<div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
 					{/* Daily Goal */}
 					<div className='bg-[#111111] rounded-2xl p-5 border border-white/5'>
 						<label
 							htmlFor='setup-daily-goal'
-							className='text-[9px] uppercase tracking-[0.2em] font-bold text-[#ababab] block mb-3'
+							className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#ababab] block mb-3'
 						>
 							Daily Goal
 						</label>
@@ -168,7 +184,7 @@ export default function Setup({ onComplete }: SetupProps) {
 					<div className='bg-[#111111] rounded-2xl p-5 border border-white/5'>
 						<label
 							htmlFor='setup-portion-size'
-							className='text-[9px] uppercase tracking-[0.2em] font-bold text-[#ababab] block mb-3'
+							className='text-[10px] uppercase tracking-[0.2em] font-bold text-[#ababab] block mb-3'
 						>
 							Per Dose
 						</label>
@@ -193,7 +209,7 @@ export default function Setup({ onComplete }: SetupProps) {
 				</div>
 
 				{/* Info Boxes */}
-				<div className='grid grid-cols-2 gap-3 mb-6'>
+				<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6'>
 					<div className='bg-[#0e0e0e] border border-white/5 rounded-xl p-3 text-xs'>
 						<div className='text-[#ababab] font-semibold mb-1'>Recommended</div>
 						<div className='text-[#00fdc1] font-bold'>{recommendedDose}g</div>
@@ -221,8 +237,8 @@ export default function Setup({ onComplete }: SetupProps) {
 						<div>
 							<div className='text-[#ababab] font-semibold mb-1'>How It Works</div>
 							<p className='text-[#7c7c7c] leading-relaxed'>
-								Track your daily creatine intake throughout the day. Your daily goal resets at 4:30 AM
-								by default.
+								Log intake during the day, keep your target in view, and adjust quickly when needed.
+								Your day resets at 4:30 AM by default.
 							</p>
 						</div>
 					</div>

@@ -25,7 +25,7 @@ export default function SectionHeader({ title, icon, children, className }: Sect
 	return (
 		<div className={cn('flex items-center gap-2 mb-5', className)}>
 			{icon ? (
-				<span className='w-1.5 h-1.5 rounded-full bg-[#00fdc1] flex-shrink-0' />
+				<span className='text-[#00fdc1] flex-shrink-0'>{icon}</span>
 			) : (
 				<span className='w-1.5 h-1.5 rounded-full bg-[#00fdc1] flex-shrink-0' />
 			)}

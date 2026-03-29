@@ -40,7 +40,7 @@ export default function ProgressBar({ progress, isGoalReached = false, className
 				}}
 				className={cn(
 					'h-full transition-shadow',
-					isGoalReached ? 'bg-tertiary shadow-[0_0_25px_rgba(74,59,48,0.6)]' : 'bg-[#7f98ff]',
+					isGoalReached ? 'bg-[#4a3b30] shadow-[0_0_25px_rgba(74,59,48,0.6)]' : 'bg-[#7f98ff]',
 				)}
 			/>
 		</div>

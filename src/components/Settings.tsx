@@ -194,12 +194,12 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 			</section>
 
 			<div className='grid gap-6 xl:grid-cols-2 xl:items-start'>
-				{/* Performance Goals Section */}
+				{/* Tracking Targets Section */}
 				<section className='space-y-4 xl:col-start-1'>
 					<div className='flex items-center gap-2 mb-2'>
 						<SettingsIcon className='text-[#00fdc1] w-4 h-4' />
 						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-							Performance Goals
+							Tracking Targets
 						</span>
 					</div>
 					<p className='text-[11px] text-[#9a897c]'>Values save instantly. Use +/- to adjust your targets.</p>
@@ -298,7 +298,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 					<div className='flex items-center gap-2 mb-2'>
 						<Calculator className='text-[#7f98ff] w-4 h-4' />
 						<span className='text-xs font-headline font-bold tracking-widest text-[#ababab] uppercase'>
-							Smart Calibration
+							Quick Calibration
 						</span>
 					</div>
 					<div className='bg-[#131313] p-5 rounded-[1.5rem] border border-white/10 relative overflow-hidden'>

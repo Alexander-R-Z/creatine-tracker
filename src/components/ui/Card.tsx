@@ -13,10 +13,10 @@ interface CardProps {
 }
 
 const cardVariants: Record<CardVariant, string> = {
-	base: 'bg-[#111111] rounded-[1.5rem] p-6 border border-white/5',
-	elevated: 'bg-[#131313] rounded-[1.5rem] p-6 border border-white/5 shadow-2xl',
+	base: 'bg-[#111111] rounded-2xl p-8 border border-white/5',
+	elevated: 'bg-[#131313] rounded-2xl p-5 border border-[#4a3b30]/25 shadow-2xl',
 	interactive:
-		'bg-[#111111] rounded-[1.5rem] p-6 border border-white/5 cursor-pointer hover:border-white/10 transition-all active:scale-95',
+		'bg-[#111111] rounded-2xl p-5 border border-white/5 cursor-pointer hover:border-white/10 transition-[border-color,background-color,transform] duration-150 active:scale-95',
 	hero: 'bg-[#111111] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden',
 };
 

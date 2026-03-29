@@ -198,13 +198,13 @@ export default function History({ state, updateState }: HistoryProps) {
 										</div>
 
 										{isEditing ? (
-											<div className='flex items-center gap-4'>
+											<div className='flex items-center gap-3'>
 												<div className='flex items-center gap-3'>
 													<button
 														aria-label='Decrease logged amount'
 														title='Decrease logged amount'
 														onClick={() => setEditValue((prev) => Math.max(0, prev - 1))}
-														className='w-10 h-10 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
+														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Minus className='w-4 h-4' />
 													</button>
@@ -215,7 +215,7 @@ export default function History({ state, updateState }: HistoryProps) {
 														aria-label='Increase logged amount'
 														title='Increase logged amount'
 														onClick={() => setEditValue((prev) => prev + 1)}
-														className='w-10 h-10 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
+														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Plus className='w-4 h-4' />
 													</button>
@@ -224,7 +224,7 @@ export default function History({ state, updateState }: HistoryProps) {
 													aria-label='Save logged amount'
 													title='Save logged amount'
 													onClick={saveEdit}
-													className='w-10 h-10 rounded-xl bg-[#00fdc1] border border-[#00fdc1]/30 flex items-center justify-center text-[#004734]'
+													className='w-11 h-11 rounded-xl bg-[#00fdc1] border border-[#00fdc1]/30 flex items-center justify-center text-[#004734]'
 												>
 													<Check className='w-5 h-5' />
 												</button>
@@ -234,7 +234,7 @@ export default function History({ state, updateState }: HistoryProps) {
 												onClick={() => startEditing(dateStr, log.total)}
 												aria-label={`Edit logged amount for ${isToday ? 'today' : format(date, 'EEEE')}`}
 												title='Edit logged amount'
-												className='flex items-center gap-4 cursor-pointer group rounded-2xl px-3 py-2.5 -mr-1 min-h-[3.25rem] hover:border-white/20 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00fdc1]/60 transition-all'
+												className='flex items-center gap-4 cursor-pointer group rounded-2xl px-3 py-2.5 -mr-1 min-h-[3.25rem] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00fdc1]/60 transition-[background-color,color,transform,opacity] duration-150'
 											>
 												<div className='flex flex-col items-end'>
 													<span
@@ -259,13 +259,13 @@ export default function History({ state, updateState }: HistoryProps) {
 															}}
 															transition={{ duration: 0.28, ease: 'easeOut' }}
 															className={cn(
-																'h-full transition-all duration-500 origin-left',
+																'h-full origin-left',
 																isCompleted ? 'bg-[#00fdc1]' : 'bg-[#7f98ff]',
 															)}
 														/>
 													</div>
 												</div>
-												<div className='text-[#8d8d8d] group-hover:text-secondary group-hover:translate-x-0.5 transition-all'>
+												<div className='text-[#8d8d8d] opacity-80 md:opacity-60 group-hover:opacity-100 group-hover:text-secondary group-hover:translate-x-0.5 transition-[color,opacity,transform] duration-150'>
 													<Pencil className='w-4 h-4' />
 												</div>
 											</button>

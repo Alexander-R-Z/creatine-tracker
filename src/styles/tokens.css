@@ -82,12 +82,16 @@
 	--glow-secondary: 0 0 20px rgba(127, 152, 255, 0.2);
 	--glow-tertiary: 0 0 25px var(--color-tertiary-glow);
 	--glow-dim: 0 0 30px var(--color-primary-dim);
+	--glow-opacity-subtle: 0.06;
+	--glow-opacity-default: 0.08;
+	--glow-opacity-strong: 0.12;
 
 	/* ========== BLUR SCALE ========== */
 	--blur-sm: 12px;
 	--blur-md: 40px;
-	--blur-lg: 100px;
+	--blur-lg: 90px;
 	--blur-xl: 120px;
+	--blur-hero: 100px;
 
 	/* ========== TYPOGRAPHY ========== */
 	--font-sans: ui-sans-serif, system-ui, sans-serif;
@@ -128,9 +132,11 @@
 
 	/* ========== TRANSITIONS & ANIMATIONS ========== */
 	--transition-fast: 150ms;
+	--transition-micro: 120ms;
 	--transition-base: 200ms;
 	--transition-slow: 300ms;
 	--transition-slower: 500ms;
+	--transition-snappy: 240ms;
 
 	--easing-linear: linear;
 	--easing-easeout: cubic-bezier(0.4, 0, 0.2, 1);
@@ -180,8 +186,12 @@
 
 	/* Card base styles */
 	--card-padding: var(--space-8);
+	--card-padding-secondary: var(--space-5);
+	--card-padding-tertiary: var(--space-4);
 	--card-border-radius: var(--radius-3xl);
 	--card-border: 1px solid var(--color-border-subtle);
+	--card-border-elevated: 1px solid rgba(74, 59, 48, 0.25);
+	--card-border-active: 1px solid rgba(0, 253, 193, 0.5);
 	--card-background: var(--color-bg-1);
 	--card-shadow: var(--shadow-2xl);
 
