@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
 	Plus,
@@ -15,6 +15,7 @@ import {
 	CheckCircle2,
 	Calendar,
 	Activity,
+	ChartNoAxesCombined,
 	ChevronRight,
 } from 'lucide-react';
 import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry, updateDayLog } from '../lib/storage';
@@ -123,6 +124,28 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		updateState((prev) => updateDayLog(prev, dateStr, Math.max(0, correctValue)));
 		setIsCorrectingToday(false);
 	};
+
+	useEffect(() => {
+		const onShortcutAdd = () => {
+			if (effectivePortion <= 0) {
+				return;
+			}
+			updateState((prev) => addEntry(prev, effectivePortion));
+			setPortionModifier(0);
+		};
+
+		const onShortcutUndo = () => {
+			updateState((prev) => undoLastEntry(prev));
+		};
+
+		window.addEventListener('ct:home-add', onShortcutAdd as EventListener);
+		window.addEventListener('ct:home-undo', onShortcutUndo as EventListener);
+
+		return () => {
+			window.removeEventListener('ct:home-add', onShortcutAdd as EventListener);
+			window.removeEventListener('ct:home-undo', onShortcutUndo as EventListener);
+		};
+	}, [effectivePortion, updateState]);
 
 	const weeklyData = Array.from({ length: 7 }).map((_, i) => {
 		const effectiveDate = getEffectiveDate(subDays(new Date(), 6 - i), state.settings.resetTime);
@@ -345,18 +368,24 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 				<div className='absolute -right-16 -top-16 w-52 h-52 bg-[#00fdc1]/8 blur-[90px] rounded-full pointer-events-none' />
 				<div className='absolute -left-16 -bottom-20 w-56 h-56 bg-[#4a3b30]/16 blur-[100px] rounded-full pointer-events-none' />
 				<div className='relative z-10'>
-					<button
-						onClick={() => setView('history')}
-						className='flex items-center justify-between w-full mb-6 group'
-					>
-						<div className='flex items-center gap-2'>
+					<div className='flex items-center justify-between mb-6'>
+						<button onClick={() => setView('history')} className='flex items-center gap-2 group'>
 							<Activity className='w-4 h-4 text-[#7f98ff]' />
 							<span className='text-[10px] font-bold text-[#666666] uppercase tracking-widest group-hover:text-white transition-colors'>
 								Last 7 Days
 							</span>
-						</div>
-						<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
-					</button>
+							<ChevronRight className='w-4 h-4 text-[#333333] group-hover:text-white transition-colors' />
+						</button>
+						<button
+							onClick={() => setView('analytics')}
+							className='md:hidden flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#6f6f6f] hover:text-[#ababab] transition-colors'
+							aria-label='Open analytics'
+							title='Open analytics'
+						>
+							<ChartNoAxesCombined className='w-3.5 h-3.5' />
+							<span>Analytics</span>
+						</button>
+					</div>
 					<div className='relative px-2'>
 						<div className='relative h-28 w-full max-w-[420px] md:max-w-[720px] lg:max-w-full mx-auto'>
 							<div className='absolute -left-6 top-0 h-[calc(100%-2rem)] flex flex-col justify-between items-end'>

@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState, useMemo } from 'react';
+import { ChangeEvent, useRef, useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
 	Plus,
@@ -135,6 +135,18 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 		anchor.click();
 		URL.revokeObjectURL(url);
 	};
+
+	useEffect(() => {
+		const onShortcutExport = () => {
+			handleExportBackup();
+		};
+
+		window.addEventListener('ct:settings-export', onShortcutExport as EventListener);
+
+		return () => {
+			window.removeEventListener('ct:settings-export', onShortcutExport as EventListener);
+		};
+	}, [state]);
 
 	const handleImportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];

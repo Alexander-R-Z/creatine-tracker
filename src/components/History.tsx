@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { AppState, getLogForDate, updateDayLog } from '../lib/storage';
+import { format, parseISO, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { AppState, getEffectiveDate, getLogForDate, updateDayLog } from '../lib/storage';
 import { cn } from '../lib/utils';
 import { Plus, Minus, Check, Calendar, FolderArchive, Pencil } from 'lucide-react';
 
@@ -14,9 +14,9 @@ export default function History({ state, updateState }: HistoryProps) {
 	const MONTHS_BATCH_SIZE = 12;
 
 	const last7Days = useMemo(() => {
-		const now = new Date();
-		return Array.from({ length: 7 }).map((_, i) => subDays(now, i));
-	}, []);
+		const effectiveToday = parseISO(getEffectiveDate(new Date(), state.settings.resetTime));
+		return Array.from({ length: 7 }).map((_, i) => subDays(effectiveToday, i));
+	}, [state.settings.resetTime]);
 
 	const retentionMonths = state.settings.entryRetentionMonths ?? 24;
 
