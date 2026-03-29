@@ -115,7 +115,14 @@ export function parseBackupPayload(content: string): AppState {
 	// Accept both full wrapper { data: ... } and raw AppState backups.
 	if (typeof raw === 'object' && raw !== null && 'data' in raw) {
 		const wrapped = raw as { data?: unknown };
+		if (typeof wrapped.data !== 'object' || wrapped.data === null || Array.isArray(wrapped.data)) {
+			throw new Error('Invalid backup payload: "data" must be an object.');
+		}
 		return normalizeImportedState(wrapped.data);
+	}
+
+	if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+		throw new Error('Invalid backup payload: expected an app state object.');
 	}
 
 	return normalizeImportedState(raw);

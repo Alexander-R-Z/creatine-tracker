@@ -66,6 +66,8 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		const yesterday = getEffectiveDate(subDays(new Date(), 1), state.settings.resetTime);
 
 		const sortedDates = Object.keys(state.logs).sort();
+		const earliestDate = parseISO(sortedDates[0]);
+		const latestDate = parseISO(today);
 
 		let checkDate = today;
 		if (getLogForDate(state, today).total < state.settings.dailyGoal) {
@@ -87,18 +89,24 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			}
 		}
 
-		sortedDates.forEach((dateStr) => {
-			const dLog = state.logs[dateStr];
-			totalGrams += dLog.total;
+		sortedDates.forEach((loggedDate) => {
+			totalGrams += state.logs[loggedDate].total;
+			if (state.logs[loggedDate].total >= state.settings.dailyGoal) {
+				finished++;
+			}
+		});
+
+		for (let day = earliestDate; day <= latestDate; day = addDays(day, 1)) {
+			const dayKey = format(day, 'yyyy-MM-dd');
+			const dLog = getLogForDate(state, dayKey);
 
 			if (dLog.total >= state.settings.dailyGoal) {
-				finished++;
 				tempStreak++;
 				bestStreak = Math.max(bestStreak, tempStreak);
 			} else {
 				tempStreak = 0;
 			}
-		});
+		}
 
 		return {
 			currentStreak,

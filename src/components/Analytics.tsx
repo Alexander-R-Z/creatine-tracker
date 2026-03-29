@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { addDays, format, parseISO, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { motion } from 'motion/react';
 import { ChartNoAxesCombined, Activity, Target, Flame, TrendingUp, CalendarRange, ChevronRight } from 'lucide-react';
 import { AppState, getEffectiveDate, getLogForDate } from '../lib/storage';
@@ -51,16 +51,19 @@ export default function Analytics({ state, setView }: AnalyticsProps) {
 
 		let best = 0;
 		let running = 0;
+		const earliest = parseISO(sorted[0]);
+		const latest = parseISO(getEffectiveDate(new Date(), state.settings.resetTime));
 
-		sorted.forEach((dateKey) => {
-			const total = state.logs[dateKey].total;
+		for (let day = earliest; day <= latest; day = addDays(day, 1)) {
+			const dateKey = format(day, 'yyyy-MM-dd');
+			const total = getLogForDate(state, dateKey).total;
 			if (total >= state.settings.dailyGoal) {
 				running += 1;
 				best = Math.max(best, running);
 			} else {
 				running = 0;
 			}
-		});
+		}
 
 		let current = 0;
 		let dayCursor = new Date();

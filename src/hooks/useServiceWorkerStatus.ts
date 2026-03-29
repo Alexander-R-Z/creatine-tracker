@@ -27,23 +27,30 @@ export function useServiceWorkerStatus() {
 			return;
 		}
 
+		let controllerChangeTimer: ReturnType<typeof setTimeout> | null = null;
+		let updateAvailableTimer: ReturnType<typeof setTimeout> | null = null;
+
 		const handleControllerChange = () => {
 			setStatus('updated');
 			setHasUpdate(true);
-			const timer = setTimeout(() => {
+			if (controllerChangeTimer) {
+				clearTimeout(controllerChangeTimer);
+			}
+			controllerChangeTimer = setTimeout(() => {
 				setStatus(navigator.onLine ? 'online' : 'offline');
 				setHasUpdate(false);
 			}, 5000);
-			return () => clearTimeout(timer);
 		};
 
 		const handleMessage = (event: MessageEvent) => {
 			if (event.data?.type === 'UPDATE_AVAILABLE') {
 				setStatus('updating');
-				const timer = setTimeout(() => {
+				if (updateAvailableTimer) {
+					clearTimeout(updateAvailableTimer);
+				}
+				updateAvailableTimer = setTimeout(() => {
 					setStatus('online');
 				}, 2000);
-				return () => clearTimeout(timer);
 			}
 		};
 
@@ -53,6 +60,12 @@ export function useServiceWorkerStatus() {
 		return () => {
 			navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
 			navigator.serviceWorker.removeEventListener('message', handleMessage);
+			if (controllerChangeTimer) {
+				clearTimeout(controllerChangeTimer);
+			}
+			if (updateAvailableTimer) {
+				clearTimeout(updateAvailableTimer);
+			}
 		};
 	}, []);
 

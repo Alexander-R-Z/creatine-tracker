@@ -232,10 +232,13 @@ export function undoLastEntry(state: AppState): AppState {
 
 export function updateDayLog(state: AppState, dateStr: string, newTotal: number): AppState {
 	const currentLog = getLogForDate(state, dateStr);
+	const snappedTotal = snapToHalfStep(Math.max(0, newTotal));
+	const snappedCurrentTotal = snapToHalfStep(Math.max(0, currentLog.total));
 
 	const newLog: DayLog = {
-		...currentLog,
-		total: snapToHalfStep(Math.max(0, newTotal)),
+		total: snappedTotal,
+		// If total is manually changed, drop old entries to avoid undo subtracting stale amounts.
+		entries: snappedTotal === snappedCurrentTotal ? currentLog.entries : [],
 	};
 
 	// If the log is now empty (total=0, no entries), remove the day entirely
