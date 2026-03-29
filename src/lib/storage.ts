@@ -1,4 +1,4 @@
-import { format, subHours, startOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { CURRENT_SCHEMA_VERSION, migrateToCurrentVersion } from './migrations';
 
 export interface LogEntry {
@@ -144,13 +144,18 @@ export function normalizeImportedState(raw: unknown): AppState {
 	return migrateAndValidate(raw);
 }
 
-// The day ends at a configurable time (default 04:30 AM).
-// To get the "effective" date for tracking, we subtract the offset.
+// The day ends at a configurable local wall-clock time (default 04:30 AM).
+// We compare against today's reset timestamp to avoid DST/fractional-hour edge cases.
 export function getEffectiveDate(date: Date = new Date(), resetTime: string = '04:30'): string {
 	const [hours, minutes] = resetTime.split(':').map(Number);
-	const offsetHours = hours + minutes / 60;
-	const effective = subHours(date, offsetHours);
-	return format(startOfDay(effective), 'yyyy-MM-dd');
+	const resetToday = new Date(date);
+	resetToday.setHours(hours, minutes, 0, 0);
+
+	if (date < resetToday) {
+		return format(subDays(date, 1), 'yyyy-MM-dd');
+	}
+
+	return format(date, 'yyyy-MM-dd');
 }
 
 export function loadState(): AppState {
