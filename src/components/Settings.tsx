@@ -342,7 +342,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 									<div className='text-[9px] uppercase tracking-widest font-bold text-[#666666]'>
 										Suggested
 									</div>
-									<div className='text-xl font-headline font-black text-[#00fdc1] mt-1'>
+									<div className='text-xl font-headline font-black text-white mt-1'>
 										{formatGrams(recommendedDose)}g
 									</div>
 								</div>
