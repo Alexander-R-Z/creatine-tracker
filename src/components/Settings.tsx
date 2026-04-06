@@ -110,6 +110,13 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 		}));
 	};
 
+	const updateWeeklyChartCarousel = (enabled: boolean) => {
+		updateState((prev) => ({
+			...prev,
+			settings: { ...prev.settings, weeklyChartCarousel: enabled },
+		}));
+	};
+
 	// Format months as "Xy Zm" (e.g., "2y", "1y 3m", "6m")
 	const formatRetentionMonths = (months: number): string => {
 		const years = Math.floor(months / 12);
@@ -125,6 +132,7 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 
 	const resetTimeDisplay = state.settings.resetTime || '04:30';
 	const entryRetentionMonths = state.settings.entryRetentionMonths ?? 24;
+	const weeklyChartCarousel = state.settings.weeklyChartCarousel ?? true;
 
 	const triggerImportFile = () => {
 		fileInputRef.current?.click();
@@ -444,6 +452,41 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 								Old entries (per-entry timestamps) are automatically removed after{' '}
 								{formatRetentionMonths(entryRetentionMonths)}, but daily totals are preserved for
 								history and streak calculations.
+							</p>
+						</div>
+
+						<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-3 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+							<div className='flex items-center justify-between gap-4'>
+								<div className='flex flex-col'>
+									<span className='text-sm font-bold text-white'>Last 7 Days Carousel</span>
+									<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+										{weeklyChartCarousel ? 'On' : 'Off'}
+									</span>
+								</div>
+								<button
+									type='button'
+									aria-label='Toggle last 7 days carousel mode'
+									title='Toggle last 7 days carousel mode'
+									onClick={() => updateWeeklyChartCarousel(!weeklyChartCarousel)}
+									className={cn(
+										'relative w-12 h-7 rounded-full border transition-colors duration-200',
+										weeklyChartCarousel
+											? 'bg-[#00fdc1]/20 border-[#00fdc1]/45'
+											: 'bg-[#1a1a1a] border-white/10',
+									)}
+								>
+									<span
+										className={cn(
+											'absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-200',
+											weeklyChartCarousel ? 'left-6 bg-[#00fdc1]' : 'left-1 bg-[#666666]',
+										)}
+									/>
+								</button>
+							</div>
+							<p className='text-[10px] text-[#ababab] leading-relaxed italic'>
+								When enabled, the Home chart always keeps today on the right and shifts day labels as
+								dates roll.
 							</p>
 						</div>
 

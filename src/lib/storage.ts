@@ -18,6 +18,7 @@ export interface Settings {
 	goal?: 'gym' | 'gym_more';
 	resetTime?: string; // HH:mm format
 	entryRetentionMonths?: number; // How many months to keep per-entry details (3-60, default 24)
+	weeklyChartCarousel?: boolean; // Home chart mode: rolling 7-day window ending today
 }
 
 export interface AppState {
@@ -42,6 +43,7 @@ function createDefaultState(): AppState {
 			portionSize: 5,
 			resetTime: '04:30',
 			entryRetentionMonths: 24,
+			weeklyChartCarousel: true,
 		},
 		logs: {},
 		onboarded: false,
@@ -83,12 +85,15 @@ function sanitizeSettings(value: unknown): Settings {
 	const entryRetentionMonths = isFiniteNumber(value.entryRetentionMonths)
 		? Math.max(3, Math.min(60, Math.round(value.entryRetentionMonths)))
 		: defaults.entryRetentionMonths;
+	const weeklyChartCarousel =
+		typeof value.weeklyChartCarousel === 'boolean' ? value.weeklyChartCarousel : defaults.weeklyChartCarousel;
 
 	return {
 		dailyGoal,
 		portionSize,
 		resetTime: sanitizeResetTime(value.resetTime),
 		entryRetentionMonths,
+		weeklyChartCarousel,
 		...(goal ? { goal } : {}),
 		...(weight ? { weight } : {}),
 	};

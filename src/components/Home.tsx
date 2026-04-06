@@ -158,8 +158,24 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 		};
 	}, [effectivePortion, updateState]);
 
+	const weeklyChartCarousel = state.settings.weeklyChartCarousel ?? true;
+
 	const weeklyData = useMemo(() => {
 		const effectiveToday = parseISO(dateStr);
+
+		if (weeklyChartCarousel) {
+			return Array.from({ length: 7 }).map((_, i) => {
+				const dayDate = subDays(effectiveToday, 6 - i);
+				const dayKey = format(dayDate, 'yyyy-MM-dd');
+				const dLog = getLogForDate(state, dayKey);
+				return {
+					day: format(dayDate, 'EEE'),
+					total: dLog.total,
+					isToday: dayKey === dateStr,
+				};
+			});
+		}
+
 		const monday = startOfWeek(effectiveToday, { weekStartsOn: 1 });
 		return Array.from({ length: 7 }).map((_, i) => {
 			const dayDate = addDays(monday, i);
@@ -171,7 +187,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 				isToday: dayKey === dateStr,
 			};
 		});
-	}, [state.logs, dateStr, state.settings.resetTime]);
+	}, [state.logs, dateStr, weeklyChartCarousel]);
 
 	const weeklyChartMax = useMemo(() => {
 		const maxTotal = weeklyData.reduce((max, day) => Math.max(max, day.total), 0);
