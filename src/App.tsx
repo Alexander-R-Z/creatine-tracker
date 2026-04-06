@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Keyboard } from 'lucide-react';
 import { loadState, saveState, AppState, pruneLogs } from './lib/storage';
+import { preloadLikelySounds } from './lib/audio';
 import { cleanupExpiredMergeRollbackSnapshot } from './lib/backup';
 import Home from './components/Home';
 import Setup from './components/Setup';
@@ -37,6 +38,10 @@ export default function App() {
 	useEffect(() => {
 		saveState(state);
 	}, [state]);
+
+	useEffect(() => {
+		preloadLikelySounds();
+	}, []);
 
 	const updateState = (updater: (prev: AppState) => AppState) => {
 		setState((prev) => {

@@ -17,8 +17,17 @@ import {
 	Activity,
 	ChevronRight,
 } from 'lucide-react';
-import { AppState, getEffectiveDate, getLogForDate, addEntry, undoLastEntry, updateDayLog } from '../lib/storage';
+import {
+	AppState,
+	getEffectiveDate,
+	getLogForDate,
+	addEntry,
+	undoLastEntry,
+	updateDayLog,
+	createDefaultAudioSettings,
+} from '../lib/storage';
 import { cn } from '../lib/utils';
+import { computeNextCombo, decideAndPlay } from '../lib/audio';
 import { addDays, format, differenceInHours, parseISO, startOfWeek, subDays } from 'date-fns';
 import { View } from '../App';
 
@@ -42,6 +51,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	const progress = Math.min(1, log.total / state.settings.dailyGoal);
 	const isGoalReached = log.total >= state.settings.dailyGoal;
 	const remaining = Math.max(0, state.settings.dailyGoal - log.total);
+	const audioSettings = state.settings.audio ?? createDefaultAudioSettings();
 
 	const basePortion =
 		remaining > 0 && remaining < state.settings.portionSize ? remaining : state.settings.portionSize;
@@ -118,7 +128,34 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	}, [state.logs, state.settings.dailyGoal]);
 
 	const handleAdd = () => {
-		updateState((prev) => addEntry(prev, effectivePortion));
+		const combo = computeNextCombo(audioSettings, stats.currentStreak);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+		const oldTotal = log.total;
+		const newTotal = snapToHalfStep(oldTotal + effectivePortion);
+
+		updateState((prev) => {
+			const nextState = addEntry(prev, effectivePortion);
+			return {
+				...nextState,
+				settings: {
+					...nextState.settings,
+					audio: nextAudioSettings,
+				},
+			};
+		});
+
+		if (oldTotal < state.settings.dailyGoal && newTotal >= state.settings.dailyGoal) {
+			decideAndPlay(nextAudioSettings, 'dailyGoalReached', combo.effectiveIndex);
+		} else {
+			decideAndPlay(nextAudioSettings, 'addPortion', combo.effectiveIndex);
+		}
 		setPortionModifier(0);
 	};
 
@@ -132,8 +169,80 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 	};
 
 	const handleApplyCorrectToday = () => {
-		updateState((prev) => updateDayLog(prev, dateStr, Math.max(0, snapToHalfStep(correctValue))));
+		const correctedTotal = Math.max(0, snapToHalfStep(correctValue));
+		const combo = computeNextCombo(audioSettings, stats.currentStreak);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+
+		updateState((prev) => {
+			const nextState = updateDayLog(prev, dateStr, correctedTotal);
+			return {
+				...nextState,
+				settings: {
+					...nextState.settings,
+					audio: nextAudioSettings,
+				},
+			};
+		});
+
+		if (log.total < state.settings.dailyGoal && correctedTotal >= state.settings.dailyGoal) {
+			decideAndPlay(nextAudioSettings, 'dailyGoalReached', combo.effectiveIndex);
+		} else {
+			decideAndPlay(nextAudioSettings, 'correctToday', combo.effectiveIndex);
+		}
 		setIsCorrectingToday(false);
+	};
+
+	const handleAdjustAmount = (delta: number) => {
+		const combo = computeNextCombo(audioSettings, stats.currentStreak);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+
+		updateState((prev) => ({
+			...prev,
+			settings: {
+				...prev.settings,
+				audio: nextAudioSettings,
+			},
+		}));
+
+		decideAndPlay(nextAudioSettings, 'increaseDecrease', combo.effectiveIndex);
+		setPortionModifier((prev) => snapToHalfStep(prev + delta));
+	};
+
+	const handleAdjustCorrectValue = (delta: number) => {
+		const combo = computeNextCombo(audioSettings, stats.currentStreak);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+
+		updateState((prev) => ({
+			...prev,
+			settings: {
+				...prev.settings,
+				audio: nextAudioSettings,
+			},
+		}));
+
+		decideAndPlay(nextAudioSettings, 'increaseDecrease', combo.effectiveIndex);
+		setCorrectValue((prev) => Math.max(0, snapToHalfStep(prev + delta)));
 	};
 
 	useEffect(() => {
@@ -141,8 +250,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			if (effectivePortion <= 0) {
 				return;
 			}
-			updateState((prev) => addEntry(prev, effectivePortion));
-			setPortionModifier(0);
+			handleAdd();
 		};
 
 		const onShortcutUndo = () => {
@@ -156,7 +264,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 			window.removeEventListener('ct:home-add', onShortcutAdd as EventListener);
 			window.removeEventListener('ct:home-undo', onShortcutUndo as EventListener);
 		};
-	}, [effectivePortion, updateState]);
+	}, [effectivePortion, updateState, audioSettings, stats.currentStreak, log.total]);
 
 	const weeklyChartCarousel = state.settings.weeklyChartCarousel ?? true;
 
@@ -282,7 +390,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							<button
 								aria-label='Decrease next dose amount'
 								title='Decrease next dose amount'
-								onClick={() => setPortionModifier((prev) => snapToHalfStep(prev - GRAM_STEP))}
+								onClick={() => handleAdjustAmount(-GRAM_STEP)}
 								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-[color,background-color,transform] duration-150 hover:text-white border border-white/5'
 							>
 								<Minus className='w-5 h-5' />
@@ -310,7 +418,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							<button
 								aria-label='Increase next dose amount'
 								title='Increase next dose amount'
-								onClick={() => setPortionModifier((prev) => snapToHalfStep(prev + GRAM_STEP))}
+								onClick={() => handleAdjustAmount(GRAM_STEP)}
 								className='w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#666666] active:scale-90 transition-[color,background-color,transform] duration-150 hover:text-white border border-white/5'
 							>
 								<Plus className='w-5 h-5' />
@@ -362,9 +470,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 							>
 								<div className='flex items-center gap-2'>
 									<button
-										onClick={() =>
-											setCorrectValue((prev) => Math.max(0, snapToHalfStep(prev - GRAM_STEP)))
-										}
+										onClick={() => handleAdjustCorrectValue(-GRAM_STEP)}
 										aria-label='Decrease today total'
 										title='Decrease today total'
 										className='w-11 h-11 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center transition-[background-color,border-color,transform] duration-150 active:scale-90'
@@ -375,7 +481,7 @@ export default function Home({ state, updateState, setView }: HomeProps) {
 										{formatGrams(correctValue)}g
 									</span>
 									<button
-										onClick={() => setCorrectValue((prev) => snapToHalfStep(prev + GRAM_STEP))}
+										onClick={() => handleAdjustCorrectValue(GRAM_STEP)}
 										aria-label='Increase today total'
 										title='Increase today total'
 										className='w-11 h-11 rounded-full bg-[#1a1a1a] border border-white/10 text-white flex items-center justify-center transition-[background-color,border-color,transform] duration-150 active:scale-90'

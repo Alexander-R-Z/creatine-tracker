@@ -11,6 +11,27 @@ export interface DayLog {
 	entries: LogEntry[];
 }
 
+export interface MuffledAudioToggle {
+	enabled: boolean;
+	muffled: boolean;
+}
+
+export interface AudioComboState {
+	baseCombo: number;
+	temporaryBoost: number;
+	lastActionTime: number;
+}
+
+export interface AudioSettings {
+	enabled: boolean;
+	addPortion: boolean;
+	dailyGoalReached: boolean;
+	correctToday: MuffledAudioToggle;
+	increaseDecrease: MuffledAudioToggle;
+	historyEdit: MuffledAudioToggle;
+	combo: AudioComboState;
+}
+
 export interface Settings {
 	dailyGoal: number;
 	portionSize: number;
@@ -24,6 +45,7 @@ export interface Settings {
 	dailyReminderTime?: string; // HH:mm format
 	missedGoalReminderEnabled?: boolean;
 	missedGoalReminderTime?: string; // HH:mm format
+	audio?: AudioSettings;
 }
 
 export interface AppState {
@@ -35,6 +57,26 @@ export interface AppState {
 
 const STORAGE_KEY = 'obsidian_creatine_data';
 const GRAM_STEP = 0.5;
+
+function clampNumber(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(max, value));
+}
+
+export function createDefaultAudioSettings(): AudioSettings {
+	return {
+		enabled: false,
+		addPortion: true,
+		dailyGoalReached: true,
+		correctToday: { enabled: true, muffled: true },
+		increaseDecrease: { enabled: true, muffled: true },
+		historyEdit: { enabled: true, muffled: true },
+		combo: {
+			baseCombo: 0,
+			temporaryBoost: 0,
+			lastActionTime: 0,
+		},
+	};
+}
 
 function snapToHalfStep(value: number): number {
 	return Math.round(value / GRAM_STEP) * GRAM_STEP;
@@ -54,6 +96,7 @@ function createDefaultState(): AppState {
 			dailyReminderTime: '09:00',
 			missedGoalReminderEnabled: true,
 			missedGoalReminderTime: '22:00',
+			audio: createDefaultAudioSettings(),
 		},
 		logs: {},
 		onboarded: false,
@@ -88,6 +131,46 @@ function sanitizeTime(value: unknown, fallback: string): string {
 	return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
+function sanitizeMuffledToggle(value: unknown, fallback: MuffledAudioToggle): MuffledAudioToggle {
+	if (!isObject(value)) return fallback;
+	return {
+		enabled: typeof value.enabled === 'boolean' ? value.enabled : fallback.enabled,
+		muffled: typeof value.muffled === 'boolean' ? value.muffled : fallback.muffled,
+	};
+}
+
+function sanitizeAudioSettings(value: unknown): AudioSettings {
+	const defaults = createDefaultAudioSettings();
+	if (!isObject(value)) return defaults;
+
+	let combo = defaults.combo;
+	if (isObject(value.combo)) {
+		const rawBaseCombo = isFiniteNumber(value.combo.baseCombo) ? value.combo.baseCombo : defaults.combo.baseCombo;
+		const rawTemporaryBoost = isFiniteNumber(value.combo.temporaryBoost)
+			? value.combo.temporaryBoost
+			: defaults.combo.temporaryBoost;
+		const rawLastActionTime = isFiniteNumber(value.combo.lastActionTime)
+			? value.combo.lastActionTime
+			: defaults.combo.lastActionTime;
+		combo = {
+			baseCombo: clampNumber(Math.floor(rawBaseCombo), 0, 35),
+			temporaryBoost: clampNumber(rawTemporaryBoost, 0, 40),
+			lastActionTime: Math.max(0, Math.floor(rawLastActionTime)),
+		};
+	}
+
+	return {
+		enabled: typeof value.enabled === 'boolean' ? value.enabled : defaults.enabled,
+		addPortion: typeof value.addPortion === 'boolean' ? value.addPortion : defaults.addPortion,
+		dailyGoalReached:
+			typeof value.dailyGoalReached === 'boolean' ? value.dailyGoalReached : defaults.dailyGoalReached,
+		correctToday: sanitizeMuffledToggle(value.correctToday, defaults.correctToday),
+		increaseDecrease: sanitizeMuffledToggle(value.increaseDecrease, defaults.increaseDecrease),
+		historyEdit: sanitizeMuffledToggle(value.historyEdit, defaults.historyEdit),
+		combo,
+	};
+}
+
 function sanitizeSettings(value: unknown): Settings {
 	const defaults = createDefaultState().settings;
 	if (!isObject(value)) return defaults;
@@ -115,6 +198,7 @@ function sanitizeSettings(value: unknown): Settings {
 		typeof value.missedGoalReminderEnabled === 'boolean'
 			? value.missedGoalReminderEnabled
 			: defaults.missedGoalReminderEnabled;
+	const audio = sanitizeAudioSettings(value.audio);
 
 	return {
 		dailyGoal,
@@ -127,6 +211,7 @@ function sanitizeSettings(value: unknown): Settings {
 		dailyReminderTime: sanitizeTime(value.dailyReminderTime, defaults.dailyReminderTime),
 		missedGoalReminderEnabled,
 		missedGoalReminderTime: sanitizeTime(value.missedGoalReminderTime, defaults.missedGoalReminderTime),
+		audio,
 		...(goal ? { goal } : {}),
 		...(weight ? { weight } : {}),
 	};

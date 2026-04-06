@@ -12,8 +12,10 @@ import {
 	Target,
 	Zap,
 	Info,
+	Volume2,
+	Play,
 } from 'lucide-react';
-import { AppState, Settings as SettingsType } from '../lib/storage';
+import { AppState, Settings as SettingsType, createDefaultAudioSettings, AudioSettings } from '../lib/storage';
 import { cn } from '../lib/utils';
 import { Button, Card } from './ui';
 import {
@@ -24,6 +26,7 @@ import {
 	parseBackupPayload,
 	rollbackLastMergeImport,
 } from '../lib/backup';
+import { computeNextCombo, decayTemporaryBoost, decideAndPlay, getBatchStart, getEffectiveIndex } from '../lib/audio';
 import { type NotificationReminderStatus } from '../hooks/useNotificationReminders';
 
 interface SettingsProps {
@@ -147,6 +150,15 @@ export default function Settings({
 	const dailyReminderTime = state.settings.dailyReminderTime ?? '09:00';
 	const missedGoalReminderEnabled = state.settings.missedGoalReminderEnabled ?? true;
 	const missedGoalReminderTime = state.settings.missedGoalReminderTime ?? '22:00';
+	const audioSettings = state.settings.audio ?? createDefaultAudioSettings();
+	const now = Date.now();
+	const decayedBoost = decayTemporaryBoost(
+		audioSettings.combo.temporaryBoost,
+		audioSettings.combo.lastActionTime,
+		now,
+	);
+	const effectiveIndex = getEffectiveIndex(audioSettings.combo.baseCombo, decayedBoost);
+	const activeBatchStart = getBatchStart(effectiveIndex);
 	const canEnableNotifications =
 		notificationStatus.supported && notificationStatus.isInstalled && notificationStatus.permission !== 'denied';
 
@@ -161,6 +173,36 @@ export default function Settings({
 			...prev,
 			settings: updater(prev.settings),
 		}));
+	};
+
+	const setAudioSettings = (updater: (prev: AudioSettings) => AudioSettings) => {
+		updateState((prev) => {
+			const currentAudio = prev.settings.audio ?? createDefaultAudioSettings();
+			return {
+				...prev,
+				settings: {
+					...prev.settings,
+					audio: updater(currentAudio),
+				},
+			};
+		});
+	};
+
+	const triggerTestSound = (
+		eventType: 'addPortion' | 'dailyGoalReached' | 'correctToday' | 'increaseDecrease' | 'historyEdit',
+	) => {
+		const combo = computeNextCombo(audioSettings, audioSettings.combo.baseCombo);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+
+		setAudioSettings(() => nextAudioSettings);
+		decideAndPlay(nextAudioSettings, eventType, combo.effectiveIndex);
 	};
 
 	const handleToggleNotifications = async () => {
@@ -684,6 +726,232 @@ export default function Settings({
 										}
 										className='bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#00fdc1]/50'
 									/>
+								</div>
+							</div>
+						</div>
+
+						<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+							<div className='flex items-start justify-between gap-4'>
+								<div className='flex flex-col gap-1'>
+									<div className='flex items-center gap-2'>
+										<Volume2 className='w-4 h-4 text-[#00fdc1]' />
+										<span className='text-sm font-bold text-white'>Audio</span>
+									</div>
+									<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+										Impact index {effectiveIndex} | Batch {activeBatchStart}-{activeBatchStart + 9}
+									</span>
+								</div>
+								<button
+									type='button'
+									onClick={() => setAudioSettings((prev) => ({ ...prev, enabled: !prev.enabled }))}
+									aria-label={audioSettings.enabled ? 'Disable audio' : 'Enable audio'}
+									title={audioSettings.enabled ? 'Disable audio' : 'Enable audio'}
+									className={cn(
+										'relative w-12 h-7 rounded-full border transition-colors duration-200',
+										audioSettings.enabled
+											? 'bg-[#00fdc1]/20 border-[#00fdc1]/45'
+											: 'bg-[#1a1a1a] border-white/10',
+									)}
+								>
+									<span
+										className={cn(
+											'absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-200',
+											audioSettings.enabled ? 'left-6 bg-[#00fdc1]' : 'left-1 bg-[#666666]',
+										)}
+									/>
+								</button>
+							</div>
+
+							<div className='text-[10px] text-[#ababab] leading-relaxed'>
+								Consistency sets base impact (max 35). Rapid actions add temporary boost with
+								exponential decay.
+							</div>
+
+							<div className='grid gap-3'>
+								<div className='rounded-xl border border-white/5 bg-[#171717] px-4 py-3 space-y-2'>
+									<div className='flex items-center justify-between'>
+										<span className='text-sm font-semibold text-white'>Add Portion</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({ ...prev, addPortion: !prev.addPortion }))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.addPortion ? 'On' : 'Off'}
+										</button>
+									</div>
+									<button
+										type='button'
+										onClick={() => triggerTestSound('addPortion')}
+										className='w-full h-9 rounded-lg border border-white/10 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors'
+									>
+										<Play className='w-3.5 h-3.5' /> Test
+									</button>
+								</div>
+
+								<div className='rounded-xl border border-white/5 bg-[#171717] px-4 py-3 space-y-2'>
+									<div className='flex items-center justify-between'>
+										<span className='text-sm font-semibold text-white'>Daily Goal Reached</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													dailyGoalReached: !prev.dailyGoalReached,
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.dailyGoalReached ? 'On' : 'Off'}
+										</button>
+									</div>
+									<button
+										type='button'
+										onClick={() => triggerTestSound('dailyGoalReached')}
+										className='w-full h-9 rounded-lg border border-white/10 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors'
+									>
+										<Play className='w-3.5 h-3.5' /> Test
+									</button>
+								</div>
+
+								<div className='rounded-xl border border-white/5 bg-[#171717] px-4 py-3 space-y-2'>
+									<div className='flex items-center justify-between'>
+										<span className='text-sm font-semibold text-white'>Correct Today</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													correctToday: {
+														...prev.correctToday,
+														enabled: !prev.correctToday.enabled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.correctToday.enabled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<div className='flex items-center justify-between'>
+										<span className='text-[11px] text-[#ababab]'>Muffled</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													correctToday: {
+														...prev.correctToday,
+														muffled: !prev.correctToday.muffled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.correctToday.muffled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<button
+										type='button'
+										onClick={() => triggerTestSound('correctToday')}
+										className='w-full h-9 rounded-lg border border-white/10 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors'
+									>
+										<Play className='w-3.5 h-3.5' /> Test
+									</button>
+								</div>
+
+								<div className='rounded-xl border border-white/5 bg-[#171717] px-4 py-3 space-y-2'>
+									<div className='flex items-center justify-between'>
+										<span className='text-sm font-semibold text-white'>Increase / Decrease</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													increaseDecrease: {
+														...prev.increaseDecrease,
+														enabled: !prev.increaseDecrease.enabled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.increaseDecrease.enabled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<div className='flex items-center justify-between'>
+										<span className='text-[11px] text-[#ababab]'>Muffled</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													increaseDecrease: {
+														...prev.increaseDecrease,
+														muffled: !prev.increaseDecrease.muffled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.increaseDecrease.muffled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<button
+										type='button'
+										onClick={() => triggerTestSound('increaseDecrease')}
+										className='w-full h-9 rounded-lg border border-white/10 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors'
+									>
+										<Play className='w-3.5 h-3.5' /> Test
+									</button>
+								</div>
+
+								<div className='rounded-xl border border-white/5 bg-[#171717] px-4 py-3 space-y-2'>
+									<div className='flex items-center justify-between'>
+										<span className='text-sm font-semibold text-white'>History Edit</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													historyEdit: {
+														...prev.historyEdit,
+														enabled: !prev.historyEdit.enabled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.historyEdit.enabled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<div className='flex items-center justify-between'>
+										<span className='text-[11px] text-[#ababab]'>Muffled</span>
+										<button
+											type='button'
+											onClick={() =>
+												setAudioSettings((prev) => ({
+													...prev,
+													historyEdit: {
+														...prev.historyEdit,
+														muffled: !prev.historyEdit.muffled,
+													},
+												}))
+											}
+											className='text-[10px] font-bold uppercase tracking-wider text-[#00fdc1]'
+										>
+											{audioSettings.historyEdit.muffled ? 'On' : 'Off'}
+										</button>
+									</div>
+									<button
+										type='button'
+										onClick={() => triggerTestSound('historyEdit')}
+										className='w-full h-9 rounded-lg border border-white/10 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors'
+									>
+										<Play className='w-3.5 h-3.5' /> Test
+									</button>
 								</div>
 							</div>
 						</div>

@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { format, parseISO, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { AppState, getEffectiveDate, getLogForDate, updateDayLog } from '../lib/storage';
+import { AppState, getEffectiveDate, getLogForDate, updateDayLog, createDefaultAudioSettings } from '../lib/storage';
 import { cn } from '../lib/utils';
 import { Plus, Minus, Check, Calendar, FolderArchive, Pencil } from 'lucide-react';
+import { computeNextCombo, decideAndPlay } from '../lib/audio';
 
 interface HistoryProps {
 	state: AppState;
@@ -15,6 +16,7 @@ export default function History({ state, updateState }: HistoryProps) {
 	const GRAM_STEP = 0.5;
 	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
 	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
+	const audioSettings = state.settings.audio ?? createDefaultAudioSettings();
 
 	const last7Days = useMemo(() => {
 		const effectiveToday = parseISO(getEffectiveDate(new Date(), state.settings.resetTime));
@@ -131,9 +133,51 @@ export default function History({ state, updateState }: HistoryProps) {
 
 	const saveEdit = () => {
 		if (editingDate) {
-			updateState((prev) => updateDayLog(prev, editingDate, snapToHalfStep(editValue)));
+			const combo = computeNextCombo(audioSettings, audioSettings.combo.baseCombo);
+			const nextAudioSettings = {
+				...audioSettings,
+				combo: {
+					baseCombo: combo.baseCombo,
+					temporaryBoost: combo.nextBoost,
+					lastActionTime: combo.nextActionTime,
+				},
+			};
+			updateState((prev) => {
+				const nextState = updateDayLog(prev, editingDate, snapToHalfStep(editValue));
+				return {
+					...nextState,
+					settings: {
+						...nextState.settings,
+						audio: nextAudioSettings,
+					},
+				};
+			});
+			decideAndPlay(nextAudioSettings, 'historyEdit', combo.effectiveIndex);
 			setEditingDate(null);
 		}
+	};
+
+	const handleAdjustEditValue = (delta: number) => {
+		const combo = computeNextCombo(audioSettings, audioSettings.combo.baseCombo);
+		const nextAudioSettings = {
+			...audioSettings,
+			combo: {
+				baseCombo: combo.baseCombo,
+				temporaryBoost: combo.nextBoost,
+				lastActionTime: combo.nextActionTime,
+			},
+		};
+
+		updateState((prev) => ({
+			...prev,
+			settings: {
+				...prev.settings,
+				audio: nextAudioSettings,
+			},
+		}));
+
+		decideAndPlay(nextAudioSettings, 'increaseDecrease', combo.effectiveIndex);
+		setEditValue((prev) => Math.max(0, snapToHalfStep(prev + delta)));
 	};
 
 	return (
@@ -206,11 +250,7 @@ export default function History({ state, updateState }: HistoryProps) {
 													<button
 														aria-label='Decrease logged amount'
 														title='Decrease logged amount'
-														onClick={() =>
-															setEditValue((prev) =>
-																Math.max(0, snapToHalfStep(prev - GRAM_STEP)),
-															)
-														}
+														onClick={() => handleAdjustEditValue(-GRAM_STEP)}
 														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Minus className='w-4 h-4' />
@@ -221,9 +261,7 @@ export default function History({ state, updateState }: HistoryProps) {
 													<button
 														aria-label='Increase logged amount'
 														title='Increase logged amount'
-														onClick={() =>
-															setEditValue((prev) => snapToHalfStep(prev + GRAM_STEP))
-														}
+														onClick={() => handleAdjustEditValue(GRAM_STEP)}
 														className='w-11 h-11 rounded-xl bg-[#131313] border border-white/10 flex items-center justify-center text-white'
 													>
 														<Plus className='w-4 h-4' />
