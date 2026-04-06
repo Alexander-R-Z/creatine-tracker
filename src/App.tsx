@@ -7,6 +7,7 @@ import Home from './components/Home';
 import Setup from './components/Setup';
 import Layout from './components/Layout';
 import { StatusIndicator } from './components/StatusIndicator';
+import { useNotificationReminders } from './hooks/useNotificationReminders';
 import { useServiceWorkerStatus } from './hooks/useServiceWorkerStatus';
 import { ShortcutDefinition, isModKeyPressed, useKeyboardShortcuts } from './lib/keyboard';
 
@@ -31,6 +32,7 @@ export default function App() {
 	});
 	const [currentView, setCurrentView] = useState<View>(state.onboarded ? 'home' : 'setup');
 	const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+	const reminderControls = useNotificationReminders(state);
 
 	useEffect(() => {
 		saveState(state);
@@ -147,6 +149,8 @@ export default function App() {
 						<Settings
 							state={state}
 							updateState={updateState}
+							notificationStatus={reminderControls.status}
+							onRequestNotificationPermission={reminderControls.requestPermission}
 							onReset={() => {
 								updateState((prev) => ({ ...prev, onboarded: false, logs: {} }));
 								setCurrentView('setup');

@@ -24,14 +24,23 @@ import {
 	parseBackupPayload,
 	rollbackLastMergeImport,
 } from '../lib/backup';
+import { type NotificationReminderStatus } from '../hooks/useNotificationReminders';
 
 interface SettingsProps {
 	state: AppState;
 	updateState: (updater: (prev: AppState) => AppState) => void;
 	onReset: () => void;
+	notificationStatus: NotificationReminderStatus;
+	onRequestNotificationPermission: () => Promise<boolean>;
 }
 
-export default function Settings({ state, updateState, onReset }: SettingsProps) {
+export default function Settings({
+	state,
+	updateState,
+	onReset,
+	notificationStatus,
+	onRequestNotificationPermission,
+}: SettingsProps) {
 	const GRAM_STEP = 0.5;
 	const snapToHalfStep = (value: number) => Math.round(value / GRAM_STEP) * GRAM_STEP;
 	const formatGrams = (value: number) => (Number.isInteger(value) ? value.toString() : value.toFixed(1));
@@ -133,9 +142,51 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 	const resetTimeDisplay = state.settings.resetTime || '04:30';
 	const entryRetentionMonths = state.settings.entryRetentionMonths ?? 24;
 	const weeklyChartCarousel = state.settings.weeklyChartCarousel ?? true;
+	const notificationsEnabled = state.settings.notificationsEnabled ?? false;
+	const dailyReminderEnabled = state.settings.dailyReminderEnabled ?? true;
+	const dailyReminderTime = state.settings.dailyReminderTime ?? '09:00';
+	const missedGoalReminderEnabled = state.settings.missedGoalReminderEnabled ?? true;
+	const missedGoalReminderTime = state.settings.missedGoalReminderTime ?? '22:00';
+	const canEnableNotifications =
+		notificationStatus.supported && notificationStatus.isInstalled && notificationStatus.permission !== 'denied';
 
 	const triggerImportFile = () => {
 		fileInputRef.current?.click();
+	};
+
+	const setNotificationSettings = (
+		updater: (prev: NonNullable<AppState['settings']>) => NonNullable<AppState['settings']>,
+	) => {
+		updateState((prev) => ({
+			...prev,
+			settings: updater(prev.settings),
+		}));
+	};
+
+	const handleToggleNotifications = async () => {
+		if (notificationsEnabled) {
+			setNotificationSettings((prev) => ({
+				...prev,
+				notificationsEnabled: false,
+			}));
+			return;
+		}
+
+		if (!canEnableNotifications) {
+			window.alert(notificationStatus.reason);
+			return;
+		}
+
+		const granted = await onRequestNotificationPermission();
+		if (!granted) {
+			window.alert('Notification permission was not granted.');
+			return;
+		}
+
+		setNotificationSettings((prev) => ({
+			...prev,
+			notificationsEnabled: true,
+		}));
 	};
 
 	const handleExportBackup = () => {
@@ -490,10 +541,150 @@ export default function Settings({ state, updateState, onReset }: SettingsProps)
 							</p>
 						</div>
 
-						<div className='flex items-center justify-between py-4 border-b border-white/5 opacity-40 grayscale pointer-events-none'>
-							<span className='text-white font-medium'>Notifications</span>
-							<div className='w-10 h-5 bg-[#262626] rounded-full relative'>
-								<div className='absolute left-0.5 top-0.5 w-4 h-4 bg-[#444444] rounded-full shadow-sm' />
+						<div className='p-5 bg-[#131313] rounded-[1.5rem] border border-[#4a3b30]/25 space-y-4 relative overflow-hidden'>
+							<div className='pointer-events-none absolute -left-10 -bottom-14 w-36 h-36 bg-[#4a3b30]/12 blur-[90px] rounded-full' />
+							<div className='flex items-start justify-between gap-4 relative z-10'>
+								<div className='flex flex-col gap-1'>
+									<span className='text-sm font-bold text-white'>Notifications</span>
+									<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+										{notificationStatus.reason}
+									</span>
+								</div>
+								<button
+									type='button'
+									onClick={handleToggleNotifications}
+									aria-label={notificationsEnabled ? 'Disable notifications' : 'Enable notifications'}
+									title={notificationsEnabled ? 'Disable notifications' : 'Enable notifications'}
+									className={cn(
+										'relative w-12 h-7 rounded-full border transition-colors duration-200',
+										notificationsEnabled
+											? 'bg-[#00fdc1]/20 border-[#00fdc1]/45'
+											: 'bg-[#1a1a1a] border-white/10',
+									)}
+								>
+									<span
+										className={cn(
+											'absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-200',
+											notificationsEnabled ? 'left-6 bg-[#00fdc1]' : 'left-1 bg-[#666666]',
+										)}
+									/>
+								</button>
+							</div>
+							<p className='text-[10px] text-[#ababab] leading-relaxed relative z-10'>
+								Notifications only work when the app is installed. Daily reminders and missed-goal
+								reminders are checked locally on your device.
+							</p>
+
+							<div className='grid gap-3 relative z-10'>
+								<div className='flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-[#171717] px-4 py-3'>
+									<div className='flex flex-col'>
+										<span className='text-sm font-semibold text-white'>Daily reminder</span>
+										<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+											Sends at {dailyReminderTime}
+										</span>
+									</div>
+									<button
+										type='button'
+										aria-label='Toggle daily reminder'
+										title='Toggle daily reminder'
+										onClick={() =>
+											setNotificationSettings((prev) => ({
+												...prev,
+												dailyReminderEnabled: !(prev.dailyReminderEnabled ?? true),
+											}))
+										}
+										className={cn(
+											'relative w-12 h-7 rounded-full border transition-colors duration-200',
+											dailyReminderEnabled
+												? 'bg-[#00fdc1]/20 border-[#00fdc1]/45'
+												: 'bg-[#1a1a1a] border-white/10',
+										)}
+									>
+										<span
+											className={cn(
+												'absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-200',
+												dailyReminderEnabled ? 'left-6 bg-[#00fdc1]' : 'left-1 bg-[#666666]',
+											)}
+										/>
+									</button>
+								</div>
+
+								<div className='flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-[#171717] px-4 py-3'>
+									<div className='flex flex-col'>
+										<span className='text-sm font-semibold text-white'>Daily reminder time</span>
+										<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+											Local time
+										</span>
+									</div>
+									<input
+										type='time'
+										value={dailyReminderTime}
+										title='Daily reminder time'
+										onChange={(e) =>
+											setNotificationSettings((prev) => ({
+												...prev,
+												dailyReminderTime: e.target.value,
+											}))
+										}
+										className='bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#00fdc1]/50'
+									/>
+								</div>
+
+								<div className='flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-[#171717] px-4 py-3'>
+									<div className='flex flex-col'>
+										<span className='text-sm font-semibold text-white'>Missed-goal reminder</span>
+										<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+											Checks at {missedGoalReminderTime}
+										</span>
+									</div>
+									<button
+										type='button'
+										aria-label='Toggle missed-goal reminder'
+										title='Toggle missed-goal reminder'
+										onClick={() =>
+											setNotificationSettings((prev) => ({
+												...prev,
+												missedGoalReminderEnabled: !(prev.missedGoalReminderEnabled ?? true),
+											}))
+										}
+										className={cn(
+											'relative w-12 h-7 rounded-full border transition-colors duration-200',
+											missedGoalReminderEnabled
+												? 'bg-[#00fdc1]/20 border-[#00fdc1]/45'
+												: 'bg-[#1a1a1a] border-white/10',
+										)}
+									>
+										<span
+											className={cn(
+												'absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-200',
+												missedGoalReminderEnabled
+													? 'left-6 bg-[#00fdc1]'
+													: 'left-1 bg-[#666666]',
+											)}
+										/>
+									</button>
+								</div>
+
+								<div className='flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-[#171717] px-4 py-3'>
+									<div className='flex flex-col'>
+										<span className='text-sm font-semibold text-white'>Missed-goal cutoff</span>
+										<span className='text-[10px] text-[#666666] uppercase tracking-wider'>
+											Local time
+										</span>
+									</div>
+									<input
+										type='time'
+										value={missedGoalReminderTime}
+										title='Missed-goal cutoff time'
+										onChange={(e) =>
+											setNotificationSettings((prev) => ({
+												...prev,
+												missedGoalReminderTime: e.target.value,
+											}))
+										}
+										className='bg-[#0f0f0f] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#00fdc1]/50'
+									/>
+								</div>
 							</div>
 						</div>
 

@@ -19,6 +19,11 @@ export interface Settings {
 	resetTime?: string; // HH:mm format
 	entryRetentionMonths?: number; // How many months to keep per-entry details (3-60, default 24)
 	weeklyChartCarousel?: boolean; // Home chart mode: rolling 7-day window ending today
+	notificationsEnabled?: boolean;
+	dailyReminderEnabled?: boolean;
+	dailyReminderTime?: string; // HH:mm format
+	missedGoalReminderEnabled?: boolean;
+	missedGoalReminderTime?: string; // HH:mm format
 }
 
 export interface AppState {
@@ -44,6 +49,11 @@ function createDefaultState(): AppState {
 			resetTime: '04:30',
 			entryRetentionMonths: 24,
 			weeklyChartCarousel: true,
+			notificationsEnabled: false,
+			dailyReminderEnabled: true,
+			dailyReminderTime: '09:00',
+			missedGoalReminderEnabled: true,
+			missedGoalReminderTime: '22:00',
 		},
 		logs: {},
 		onboarded: false,
@@ -68,6 +78,16 @@ function sanitizeResetTime(value: unknown): string {
 	return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
+function sanitizeTime(value: unknown, fallback: string): string {
+	if (typeof value !== 'string') return fallback;
+	const match = value.match(/^(\d{2}):(\d{2})$/);
+	if (!match) return fallback;
+	const hours = Number(match[1]);
+	const minutes = Number(match[2]);
+	if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return fallback;
+	return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
 function sanitizeSettings(value: unknown): Settings {
 	const defaults = createDefaultState().settings;
 	if (!isObject(value)) return defaults;
@@ -87,6 +107,14 @@ function sanitizeSettings(value: unknown): Settings {
 		: defaults.entryRetentionMonths;
 	const weeklyChartCarousel =
 		typeof value.weeklyChartCarousel === 'boolean' ? value.weeklyChartCarousel : defaults.weeklyChartCarousel;
+	const notificationsEnabled =
+		typeof value.notificationsEnabled === 'boolean' ? value.notificationsEnabled : defaults.notificationsEnabled;
+	const dailyReminderEnabled =
+		typeof value.dailyReminderEnabled === 'boolean' ? value.dailyReminderEnabled : defaults.dailyReminderEnabled;
+	const missedGoalReminderEnabled =
+		typeof value.missedGoalReminderEnabled === 'boolean'
+			? value.missedGoalReminderEnabled
+			: defaults.missedGoalReminderEnabled;
 
 	return {
 		dailyGoal,
@@ -94,6 +122,11 @@ function sanitizeSettings(value: unknown): Settings {
 		resetTime: sanitizeResetTime(value.resetTime),
 		entryRetentionMonths,
 		weeklyChartCarousel,
+		notificationsEnabled,
+		dailyReminderEnabled,
+		dailyReminderTime: sanitizeTime(value.dailyReminderTime, defaults.dailyReminderTime),
+		missedGoalReminderEnabled,
+		missedGoalReminderTime: sanitizeTime(value.missedGoalReminderTime, defaults.missedGoalReminderTime),
 		...(goal ? { goal } : {}),
 		...(weight ? { weight } : {}),
 	};
